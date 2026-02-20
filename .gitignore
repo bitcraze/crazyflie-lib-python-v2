@@ -1,0 +1,23 @@
+.claude
+.venv
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Compiled extensions
+*.so
+*.pyd
+*.dll
+*.dylib
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+target/
+
+# uv lock file - not committed for libraries (only applications)
+uv.lock

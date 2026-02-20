@@ -1,0 +1,81 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "cflib2"
+dynamic = ["version"]
+description = "Rust-powered async Python library for Crazyflie quadcopters"
+authors = [
+    { name = "Bitcraze and contributors", email = "contact@bitcraze.io" },
+]
+
+readme = {file = "README.md", content-type = "text/markdown"}
+license = { text = "GPLv3+" }
+keywords = ["driver", "crazyflie", "quadcopter"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+
+    # Supported Python versions
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">= 3.10"
+
+dependencies = [
+    "packaging~=25.0",
+    "maturin[patchelf]>=1.9.6",
+]
+
+[project.urls]
+Homepage = "https://www.bitcraze.io"
+Repository = "https://github.com/bitcraze/crazyflie-lib-python-v2"
+Issues = "https://github.com/bitcraze/crazyflie-lib-python-v2/issues"
+
+[project.optional-dependencies]
+qualisys = ["qtm-rt~=3.0.2"]
+motioncapture = ["motioncapture~=1.0a4"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=0.24.0",
+]
+
+[tool.ruff.lint]
+select = ["ANN"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = { exclude = ["examples", "test"] }
+
+[tool.setuptools.package-data]
+"cflib2.resources.binaries" = ["cflib2/resources/binaries/*.bin"]
+
+[tool.maturin]
+# Path to Cargo.toml for the Rust extension
+manifest-path = "rust/Cargo.toml"
+# Python source directory
+python-source = "."
+# Include Python files from cflib2
+module-name = "cflib2._rust"
+# Compatibility with older Python versions using abi3
+features = ["pyo3/abi3-py310"]
+
+[tool.uv]
+package = true

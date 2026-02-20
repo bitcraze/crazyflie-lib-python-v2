@@ -1,0 +1,26 @@
+[package]
+name = "cflib-rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "cflib_rust"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+pyo3 = { version = "0.26" }
+pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
+crazyflie-lib = "0.5.2"
+crazyflie-link = "0.4.0"
+tokio = { version = "1.48", features = ["full"] }
+futures = "0.3.31"
+pyo3-stub-gen-derive = "0.17.0"
+pyo3-stub-gen = "0.17.0"
+
+[build-dependencies]
+pyo3-build-config = "0.26"
+
