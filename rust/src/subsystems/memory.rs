@@ -354,7 +354,7 @@ impl Memory {
 
     /// List all memories available on the Crazyflie.
     ///
-    /// Returns a list of dicts, each with keys:
+    /// Returns a list of tuples `(id, type, size)`:
     /// - `id` (int): Memory ID used for read_raw/write_raw
     /// - `type` (int): Memory type (e.g. 0x12 for trajectory)
     /// - `size` (int): Memory size in bytes
