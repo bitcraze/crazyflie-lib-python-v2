@@ -962,6 +962,48 @@ class Memory:
         * `segments` - List of CompressedSegment instances
         * `start_addr` - Address in trajectory memory (default 0)
         """
+    def get_memories(
+        self, memory_type: typing.Optional[builtins.int] = None
+    ) -> builtins.list[tuple[builtins.int, builtins.int, builtins.int]]:
+        r"""
+        List all memories available on the Crazyflie.
+
+        Returns a list of dicts, each with keys:
+        - `id` (int): Memory ID used for read_raw/write_raw
+        - `type` (int): Memory type (e.g. 0x12 for trajectory)
+        - `size` (int): Memory size in bytes
+
+        Optionally filter by memory type.
+        """
+    async def write_raw(
+        self,
+        memory_id: builtins.int,
+        data: typing.Sequence[builtins.int],
+        start_addr: builtins.int = 0,
+    ) -> int:
+        r"""
+        Write raw bytes to a memory on the Crazyflie.
+
+        Use `get_memories()` to discover available memory IDs.
+
+        # Arguments
+        * `memory_id` - ID of the memory to write to (from `get_memories()`)
+        * `data` - Raw bytes to write
+        * `start_addr` - Address in memory to write to (default 0)
+        """
+    async def read_raw(
+        self, memory_id: builtins.int, address: builtins.int, length: builtins.int
+    ) -> bytes:
+        r"""
+        Read raw bytes from a memory on the Crazyflie.
+
+        Use `get_memories()` to discover available memory IDs.
+
+        # Arguments
+        * `memory_id` - ID of the memory to read from (from `get_memories()`)
+        * `address` - Address in memory to read from
+        * `length` - Number of bytes to read
+        """
 
 @typing.final
 class NoTocCache:
