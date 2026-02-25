@@ -379,7 +379,7 @@ impl Memory {
     /// * `data` - Raw bytes to write
     /// * `start_addr` - Address in memory to write to (default 0)
     #[pyo3(signature = (memory_id, data, start_addr=0))]
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, int]"))]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
     fn write_raw<'py>(
         &self,
         py: Python<'py>,
@@ -403,12 +403,11 @@ impl Memory {
                     )))?
                     .map_err(to_pyerr)?;
 
-            let bytes_written = data.len();
             raw_mem.write(start_addr, &data).await.map_err(to_pyerr)?;
 
             cf.memory.close_memory(raw_mem).await.map_err(to_pyerr)?;
 
-            Ok(bytes_written)
+            Ok(())
         })
     }
 

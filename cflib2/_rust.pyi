@@ -980,7 +980,7 @@ class Memory:
         memory_id: builtins.int,
         data: typing.Sequence[builtins.int],
         start_addr: builtins.int = 0,
-    ) -> int:
+    ) -> None:
         r"""
         Write raw bytes to a memory on the Crazyflie.
 
