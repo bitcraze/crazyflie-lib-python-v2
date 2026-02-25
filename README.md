@@ -10,7 +10,7 @@
 
 ```python
 import asyncio
-from cflib import Crazyflie, LinkContext
+from cflib2 import Crazyflie, LinkContext
 
 async def main():
     context = LinkContext()
@@ -85,10 +85,10 @@ uv run maturin develop --release
 
 ### Regenerating Python Stubs
 
-To regenerate `cflib/_rust.pyi` after changing the Rust API:
+To regenerate `cflib2/_rust.pyi` after changing the Rust API:
 ```bash
 cargo run --bin stub_gen --manifest-path rust/Cargo.toml --no-default-features && \
-uv run scripts/fix_stubs.py cflib/_rust.pyi && uvx ruff format .
+uv run scripts/fix_stubs.py cflib2/_rust.pyi && uvx ruff format .
 ```
 
 The `--no-default-features` flag is required because the default `extension-module` feature tells PyO3 not to link against libpython (extension modules get those symbols from the Python interpreter). The stub generator is a standalone binary, so it needs libpython linked directly.
