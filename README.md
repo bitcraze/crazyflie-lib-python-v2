@@ -41,10 +41,11 @@ See the [examples/](examples/) directory for more.
 
 ### Initial Setup
 
-1. **Install dependencies:**
+1. **Install dependencies (including dev tools):**
    ```bash
    uv sync --group dev
    ```
+   This installs the `dev` dependency group which provides `maturin`, `pre-commit`, `pytest`, and other development tools. Commands prefixed with `uv run` below require this group.
 
 2. **Install pre-commit hooks:**
    ```bash

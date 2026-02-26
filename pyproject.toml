@@ -46,6 +46,7 @@ Issues = "https://github.com/bitcraze/crazyflie-lib-python-v2/issues"
 
 [dependency-groups]
 dev = [
+    "maturin[patchelf]>=1.12.4",
     "pre-commit>=4.3.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=0.24.0",
