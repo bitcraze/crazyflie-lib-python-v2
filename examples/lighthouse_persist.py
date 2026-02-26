@@ -45,40 +45,29 @@ first uploading data via the memory subsystem.
 
 Example usage:
     python lighthouse_persist.py                              # Use default URI
-    python lighthouse_persist.py radio://0/80/2M/E7E7E7E701   # Custom URI
+    python lighthouse_persist.py --uri radio://0/80/2M/E7E7E7E701   # Custom URI
 """
 
-import argparse
 import asyncio
+from dataclasses import dataclass, field
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+    geo: list[int] = field(default_factory=lambda: [0, 1])
+    """Base station IDs to persist geometry for"""
+    calib: list[int] = field(default_factory=lambda: [0])
+    """Base station IDs to persist calibration for"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Persist lighthouse data to permanent storage"
-    )
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    parser.add_argument(
-        "--geo",
-        type=int,
-        nargs="+",
-        default=[0, 1],
-        help="Base station IDs to persist geometry for (default: 0 1)",
-    )
-    parser.add_argument(
-        "--calib",
-        type=int,
-        nargs="+",
-        default=[0],
-        help="Base station IDs to persist calibration for (default: 0)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     print(f"Connecting to {args.uri}...")
     context = LinkContext()

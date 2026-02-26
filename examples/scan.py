@@ -26,20 +26,22 @@ Example usage:
     python scan.py --address E7E7E7E701  # Scan custom address
 """
 
-import argparse
 import asyncio
+from dataclasses import dataclass
+
+import tyro
 
 from cflib2 import LinkContext
 
 
+@dataclass
+class Args:
+    address: str = "E7E7E7E7E7"
+    """Address to scan (5 bytes in hex, e.g., E7E7E7E7E7)"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="Scan for Crazyflies")
-    parser.add_argument(
-        "--address",
-        default="E7E7E7E7E7",
-        help="Address to scan (5 bytes in hex, e.g., E7E7E7E7E7)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     # Parse address from hex string to bytes
     if len(args.address) != 10:

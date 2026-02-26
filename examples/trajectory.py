@@ -32,11 +32,13 @@ The trajectory can work with any positioning system (LPS, Lighthouse, etc.)
 Example usage:
     python trajectory_figure8.py                         # Default URI
     python trajectory_figure8.py --relative-yaw          # With relative yaw
-    python trajectory_figure8.py radio://0/80/2M/E7E7E7E701  # Custom URI
+    python trajectory_figure8.py --uri radio://0/80/2M/E7E7E7E701  # Custom URI
 """
 
-import argparse
 import asyncio
+from dataclasses import dataclass
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext
 from cflib2.trajectory import Poly, Poly4D
@@ -400,22 +402,16 @@ figure8 = [
 ]
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+    relative_yaw: bool = False
+    """Enable relative_yaw mode (trajectory rotates based on prior orientation)"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Fly a figure-8 trajectory using Poly4D segments"
-    )
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    parser.add_argument(
-        "--relative-yaw",
-        action="store_true",
-        help="Enable relative_yaw mode (trajectory rotates based on prior orientation)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     # Convert trajectory data to Poly4D segments
     print("Preparing trajectory segments...")

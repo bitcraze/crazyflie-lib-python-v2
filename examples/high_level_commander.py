@@ -20,21 +20,22 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+from dataclasses import dataclass
+
+import tyro
 import math
-import argparse
 
 from cflib2 import Crazyflie, LinkContext
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="High-level commander example")
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     ctx = LinkContext()
 

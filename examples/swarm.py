@@ -34,13 +34,26 @@ Example usage:
     python swarm_blink.py --cache radio://0/80/2M/E7E7E7E701 radio://0/80/2M/E7E7E7E702
 """
 
-import argparse
 import asyncio
-import sys
-import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
 
+import tyro
+
 from cflib2 import Crazyflie, LinkContext, FileTocCache, NoTocCache
+
+
+@dataclass
+class Args:
+    uris: list[str] = field(
+        default_factory=lambda: [
+            "radio://0/80/2M/E7E7E7E701",
+            "radio://0/80/2M/E7E7E7E702",
+        ]
+    )
+    """Crazyflie URIs"""
+    cache: bool = False
+    """Enable TOC file caching (uses cache/ in project root)"""
 
 
 async def blink(cf: Crazyflie) -> None:
@@ -59,28 +72,11 @@ async def blink(cf: Crazyflie) -> None:
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Blink LEDs on multiple Crazyflies using shared LinkContext"
-    )
-    parser.add_argument(
-        "uris",
-        nargs="+",
-        help="Crazyflie URIs (e.g., radio://0/80/2M/E7E7E7E701 radio://0/80/2M/E7E7E7E702)",
-    )
-    parser.add_argument(
-        "--cache",
-        action="store_true",
-        help="Enable TOC file caching (uses OS temp directory)",
-    )
-    args: argparse.Namespace = parser.parse_args()
-
-    if len(args.uris) < 2:
-        print("Please provide at least 2 URIs to demonstrate swarming")
-        sys.exit(1)
+    args = tyro.cli(Args)
 
     # Set up TOC cache (file-based if --cache specified, otherwise no caching)
     if args.cache:
-        cache_dir = str(Path(tempfile.gettempdir()) / "crazyflie_toc_cache")
+        cache_dir = str(Path(__file__).parent.parent / "cache")
         cache = FileTocCache(cache_dir)
         print(f"Using TOC cache: {cache.get_cache_dir()}")
     else:

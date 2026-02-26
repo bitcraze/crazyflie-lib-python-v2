@@ -26,7 +26,7 @@ class AppChannel:
         # Raises
         * ValueError - If data exceeds 31 bytes
         """
-    async def receive(self) -> builtins.list[builtins.list[builtins.int]]:
+    async def receive(self) -> builtins.list[builtins.bytes]:
         r"""
         Receive buffered data packets from the Crazyflie app
 
@@ -281,6 +281,11 @@ class Crazyflie:
     This provides a Python interface to the Rust Crazyflie implementation.
     All methods are async and return Python coroutines.
     """
+    @property
+    def uri(self) -> builtins.str:
+        r"""
+        The URI used to connect to this Crazyflie
+        """
     @staticmethod
     async def connect_from_uri(
         link_context: LinkContext,
@@ -337,6 +342,8 @@ class Crazyflie:
         r"""
         Get the platform subsystem
         """
+    def __str__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str: ...
 
 @typing.final
 class EmergencyControl:
@@ -404,7 +411,7 @@ class FileTocCache:
     File-based TOC cache that persists to disk
 
     This cache stores TOCs as individual JSON files in a specified directory.
-    Each TOC is stored as {crc32}.json. The cache persists across Python process
+    Each TOC is stored as {key-hex}.json. The cache persists across Python process
     restarts, making it ideal for production use.
 
     The cache directory is created automatically if it doesn't exist.
@@ -887,6 +894,22 @@ class LogBlock:
         """
 
 @typing.final
+class LogData:
+    r"""
+    Log data returned by LogStream.next()
+    """
+    @property
+    def timestamp(self) -> builtins.int:
+        r"""
+        Timestamp in milliseconds
+        """
+    @property
+    def data(self) -> dict:
+        r"""
+        Dictionary of variable name to value
+        """
+
+@typing.final
 class LogStream:
     r"""
     Log Stream
@@ -897,7 +920,7 @@ class LogStream:
     Dropping this object or the associated LogBlock will delete the log block
     in the Crazyflie.
     """
-    async def next(self) -> dict[str, int | dict[str, int | float]]:
+    async def next(self) -> LogData:
         r"""
         Get the next log data from the log block stream
 

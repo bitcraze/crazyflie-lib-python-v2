@@ -27,11 +27,13 @@ data from the Crazyflie. The example shows proper error handling and cleanup.
 
 Example usage:
     python log.py                              # Connect to default URI
-    python log.py radio://0/80/2M/E7E7E7E701   # Connect to custom URI
+    python log.py --uri radio://0/80/2M/E7E7E7E701   # Connect to custom URI
 """
 
-import argparse
 import asyncio
+from dataclasses import dataclass
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext
 
@@ -39,17 +41,14 @@ from cflib2 import Crazyflie, LinkContext
 LOG_INTERVAL = 100  # ms
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Stream accelerometer data from the Crazyflie"
-    )
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     print(f"Connecting to {args.uri}...")
     context = LinkContext()
@@ -70,8 +69,8 @@ async def main() -> None:
     try:
         while True:
             data = await log_stream.next()
-            timestamp = data["timestamp"]
-            values = data["data"]
+            timestamp = data.timestamp
+            values = data.data
 
             print(
                 f"t={timestamp:6d}ms  "

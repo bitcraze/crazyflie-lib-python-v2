@@ -82,7 +82,9 @@ def fix_stubs(content: str) -> str:
             m_end = COROUTINE_MULTI_END.match(lines[i + 2])
             if m_inner and m_end:
                 return_type = m_inner.group(1)
-                indent = re.match(r"(\s*)", line).group(1)
+                m_indent = re.match(r"(\s*)", line)
+                assert m_indent
+                indent = m_indent.group(1)
                 out.append(f"{indent}) -> {return_type}:\n")
                 _make_async(out, def_line_idx)
                 i += 3
@@ -92,9 +94,6 @@ def fix_stubs(content: str) -> str:
         i += 1
 
     result = "".join(out)
-
-    # Type the bare dict from LogStream.next()
-    result = result.replace("-> dict:", "-> dict[str, int | dict[str, int | float]]:")
 
     # Remove collections.abc import if no longer used
     if "collections.abc." not in result.split("import collections.abc\n")[-1]:

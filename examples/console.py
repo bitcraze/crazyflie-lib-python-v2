@@ -23,24 +23,25 @@ Stream console output from a Crazyflie until user interrupts (Ctrl+C).
 
 Example usage:
     python console.py                              # Connect to default URI
-    python console.py radio://0/80/2M/E7E7E7E701   # Connect to custom URI
+    python console.py --uri radio://0/80/2M/E7E7E7E701   # Connect to custom URI
 """
 
-import argparse
 import asyncio
+from dataclasses import dataclass
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="Stream Crazyflie console output")
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     print(f"Connecting to {args.uri}...")
     context = LinkContext()

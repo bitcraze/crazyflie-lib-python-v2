@@ -241,12 +241,12 @@ impl AppChannel {
     ///
     /// # Returns
     /// * List of received data packets (each up to 31 bytes)
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.list[builtins.list[builtins.int]]]"))]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.list[builtins.bytes]]"))]
     fn receive<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let recv_rx = self.recv_rx.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let mut rx_guard = recv_rx.lock().await;
-            let mut packets = Vec::new();
+            let mut packets: Vec<Py<pyo3::types::PyBytes>> = Vec::new();
 
             // Get up to 100 packets or timeout
             for _ in 0..100 {
@@ -254,7 +254,10 @@ impl AppChannel {
                     std::time::Duration::from_millis(10),
                     rx_guard.recv()
                 ).await {
-                    packets.push(packet);
+                    let py_bytes = Python::attach(|py| {
+                        pyo3::types::PyBytes::new(py, &packet).unbind()
+                    });
+                    packets.push(py_bytes);
                 } else {
                     break;
                 }

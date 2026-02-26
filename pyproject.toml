@@ -37,6 +37,7 @@ requires-python = ">= 3.10"
 dependencies = [
     "packaging~=25.0",
     "maturin[patchelf]>=1.9.6",
+    "tyro>=1.0.8",
 ]
 
 [project.urls]
@@ -53,7 +54,9 @@ dev = [
     "pre-commit>=4.3.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=0.24.0",
+    "ty>=0.0.18",
 ]
+
 
 [tool.ruff.lint]
 select = ["ANN"]

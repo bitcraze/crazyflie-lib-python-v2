@@ -29,25 +29,26 @@ as one float.
 
 Example usage:
     python app_channel.py                              # Connect to default URI
-    python app_channel.py radio://0/80/2M/E7E7E7E701   # Connect to custom URI
+    python app_channel.py --uri radio://0/80/2M/E7E7E7E701   # Connect to custom URI
 """
 
-import argparse
 import asyncio
 import struct
+from dataclasses import dataclass
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="Test bidirectional app channel")
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     print(f"Connecting to {args.uri}...")
     context = LinkContext()

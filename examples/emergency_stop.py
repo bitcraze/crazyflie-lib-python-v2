@@ -30,24 +30,25 @@ WARNING: After emergency stop, the Crazyflie will require a reboot to function a
 
 Example usage:
     python emergency_stop.py                              # Use default URI
-    python emergency_stop.py radio://0/80/2M/E7E7E7E701   # Custom URI
+    python emergency_stop.py --uri radio://0/80/2M/E7E7E7E701   # Custom URI
 """
 
-import argparse
 import asyncio
+from dataclasses import dataclass
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+
+
 async def main() -> None:
-    parser = argparse.ArgumentParser(description="Demonstrate emergency stop")
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    args: argparse.Namespace = parser.parse_args()
+    args = tyro.cli(Args)
 
     print(f"Connecting to {args.uri}...")
     context = LinkContext()

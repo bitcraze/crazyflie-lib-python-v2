@@ -38,47 +38,34 @@ Example usage:
     python toc_cache.py --cache memory               # In-memory cache
     python toc_cache.py --cache file                 # File cache
     python toc_cache.py --connections 5              # Connect 5 times
-    python toc_cache.py radio://0/80/2M/E7E7E7E7E7  # Custom URI
+    python toc_cache.py --uri radio://0/80/2M/E7E7E7E7E7  # Custom URI
 """
 
-import argparse
 import asyncio
-import tempfile
 import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import Literal, Union
+
+import tyro
 
 from cflib2 import Crazyflie, LinkContext, NoTocCache, InMemoryTocCache, FileTocCache
 
 
+@dataclass
+class Args:
+    uri: str = "radio://0/80/2M/E7E7E7E7E7"
+    """Crazyflie URI"""
+    cache: Literal["none", "memory", "file"] = "none"
+    """Type of TOC cache to use"""
+    cache_dir: str | None = None
+    """Directory for file cache (uses cache/ in project root if unset)"""
+    connections: int = 3
+    """Number of connection attempts to perform"""
+
+
 async def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Connect to Crazyflie with different TOC cache options"
-    )
-    parser.add_argument(
-        "uri",
-        nargs="?",
-        default="radio://0/80/2M/E7E7E7E7E7",
-        help="Crazyflie URI (default: radio://0/80/2M/E7E7E7E7E7)",
-    )
-    parser.add_argument(
-        "--cache",
-        choices=["none", "memory", "file"],
-        default="none",
-        help="Type of TOC cache to use (default: none)",
-    )
-    parser.add_argument(
-        "--cache-dir",
-        default=None,
-        help="Directory for file cache (default: temp directory)",
-    )
-    parser.add_argument(
-        "--connections",
-        type=int,
-        default=3,
-        help="Number of connection attempts to perform (default: 3)",
-    )
-    args = parser.parse_args()
+    args = tyro.cli(Args)
 
     # Create the appropriate cache based on user choice
     cache: Union[NoTocCache, InMemoryTocCache, FileTocCache]
@@ -97,15 +84,16 @@ async def main() -> int:
         if args.cache_dir:
             cache_dir = args.cache_dir
         else:
-            cache_dir = str(Path(tempfile.gettempdir()) / "crazyflie_toc_cache")
+            cache_dir = str(Path(__file__).parent.parent / "cache")
 
         cache = FileTocCache(cache_dir)
         print(f"Using FileTocCache (persistent cache)")
         print(f"  Cache directory: {cache.get_cache_dir()}")
         print("Note: Cache persists across script runs\n")
 
+    print(f"Connecting to {args.uri}...")
     # Connect multiple times to demonstrate cache performance
-    connection_times = []
+    connection_times: list[float] = []
     context = LinkContext()
 
     for attempt in range(1, args.connections + 1):

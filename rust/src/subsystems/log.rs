@@ -27,6 +27,16 @@ use tokio::sync::Mutex;
 
 use crate::error::to_pyerr;
 
+/// Log data returned by LogStream.next()
+#[gen_stub_pyclass]
+#[pyclass(get_all)]
+pub struct LogData {
+    /// Timestamp in milliseconds
+    pub timestamp: u32,
+    /// Dictionary of variable name to value
+    pub data: Py<PyDict>,
+}
+
 /// Access to the Crazyflie Log Subsystem
 ///
 /// This struct provides functions to interact with the Crazyflie Log subsystem.
@@ -203,7 +213,7 @@ impl LogStream {
     ///
     /// Returns:
     ///     Dictionary with timestamp and variable values
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, dict]"))]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, LogData]"))]
     fn next<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -213,11 +223,7 @@ impl LogStream {
 
             let log_data = stream.next().await.map_err(to_pyerr)?;
 
-            // Convert to Python dict
             Python::attach(|py| {
-                let dict = PyDict::new(py);
-                dict.set_item("timestamp", log_data.timestamp)?;
-
                 let data = PyDict::new(py);
                 for (name, value) in log_data.data {
                     let py_value = match value {
@@ -236,8 +242,10 @@ impl LogStream {
                     data.set_item(name, py_value)?;
                 }
 
-                dict.set_item("data", data)?;
-                Ok(dict.unbind())
+                Ok(LogData {
+                    timestamp: log_data.timestamp,
+                    data: data.unbind(),
+                })
             })
         })
     }

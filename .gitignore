@@ -21,3 +21,6 @@ target/
 
 # uv lock file - not committed for libraries (only applications)
 uv.lock
+
+# toc cache
+cache/

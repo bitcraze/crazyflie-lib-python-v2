@@ -41,19 +41,19 @@ enum AnyCacheWrapper {
 }
 
 impl crazyflie_lib::TocCache for AnyCacheWrapper {
-    fn get_toc(&self, crc32: u32) -> Option<String> {
+    fn get_toc(&self, key: &[u8]) -> Option<String> {
         match self {
-            AnyCacheWrapper::NoCache(c) => crazyflie_lib::TocCache::get_toc(c, crc32),
-            AnyCacheWrapper::InMemory(c) => crazyflie_lib::TocCache::get_toc(c, crc32),
-            AnyCacheWrapper::File(c) => crazyflie_lib::TocCache::get_toc(c, crc32),
+            AnyCacheWrapper::NoCache(c) => crazyflie_lib::TocCache::get_toc(c, key),
+            AnyCacheWrapper::InMemory(c) => crazyflie_lib::TocCache::get_toc(c, key),
+            AnyCacheWrapper::File(c) => crazyflie_lib::TocCache::get_toc(c, key),
         }
     }
 
-    fn store_toc(&self, crc32: u32, toc: &str) {
+    fn store_toc(&self, key: &[u8], toc: &str) {
         match self {
-            AnyCacheWrapper::NoCache(c) => crazyflie_lib::TocCache::store_toc(c, crc32, toc),
-            AnyCacheWrapper::InMemory(c) => crazyflie_lib::TocCache::store_toc(c, crc32, toc),
-            AnyCacheWrapper::File(c) => crazyflie_lib::TocCache::store_toc(c, crc32, toc),
+            AnyCacheWrapper::NoCache(c) => crazyflie_lib::TocCache::store_toc(c, key, toc),
+            AnyCacheWrapper::InMemory(c) => crazyflie_lib::TocCache::store_toc(c, key, toc),
+            AnyCacheWrapper::File(c) => crazyflie_lib::TocCache::store_toc(c, key, toc),
         }
     }
 }
@@ -66,6 +66,7 @@ impl crazyflie_lib::TocCache for AnyCacheWrapper {
 #[pyclass]
 pub struct Crazyflie {
     pub(crate) inner: Arc<crazyflie_lib::Crazyflie>,
+    pub(crate) uri: String,
 }
 
 #[gen_stub_pymethods]
@@ -118,6 +119,7 @@ impl Crazyflie {
 
             Ok(Crazyflie {
                 inner: Arc::new(inner),
+                uri,
             })
         })
     }
@@ -184,5 +186,19 @@ impl Crazyflie {
         Platform {
             cf: self.inner.clone(),
         }
+    }
+
+    /// The URI used to connect to this Crazyflie
+    #[getter]
+    fn uri(&self) -> &str {
+        &self.uri
+    }
+
+    fn __str__(&self) -> &str {
+        &self.uri
+    }
+
+    fn __repr__(&self) -> String {
+        format!("Crazyflie('{}')", self.uri)
     }
 }

@@ -34,7 +34,7 @@ mod toc_cache;
 use crazyflie::Crazyflie;
 use link_context::LinkContext;
 use subsystems::{
-    Commander, Console, Log, LogBlock, LogStream, Param, Platform, AppChannel,
+    Commander, Console, Log, LogBlock, LogData, LogStream, Param, Platform, AppChannel,
     Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning,
     LighthouseAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment,
@@ -50,6 +50,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Console>()?;
     m.add_class::<Log>()?;
     m.add_class::<LogBlock>()?;
+    m.add_class::<LogData>()?;
     m.add_class::<LogStream>()?;
     m.add_class::<Param>()?;
     m.add_class::<Platform>()?;
