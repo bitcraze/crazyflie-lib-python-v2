@@ -44,10 +44,6 @@ Homepage = "https://www.bitcraze.io"
 Repository = "https://github.com/bitcraze/crazyflie-lib-python-v2"
 Issues = "https://github.com/bitcraze/crazyflie-lib-python-v2/issues"
 
-[project.optional-dependencies]
-qualisys = ["qtm-rt~=3.0.2"]
-motioncapture = ["motioncapture~=1.0a4"]
-
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
