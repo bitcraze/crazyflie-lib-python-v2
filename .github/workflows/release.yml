@@ -2,12 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      draft:
-        description: 'Create GitHub Release as draft'
-        required: false
-        type: boolean
-        default: true
 
 permissions:
   contents: read
@@ -136,5 +130,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          draft: ${{ github.event.inputs.draft }}
+          draft: true
           files: wheels-*/*
