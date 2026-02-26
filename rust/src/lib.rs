@@ -73,7 +73,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-// Custom stub info gatherer that looks for pyproject.toml in the parent directory
+/// Custom stub info gatherer that looks for pyproject.toml in the parent directory.
 pub fn stub_info() -> pyo3_stub_gen::Result<pyo3_stub_gen::StubInfo> {
     use std::path::PathBuf;
 
