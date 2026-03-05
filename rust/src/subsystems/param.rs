@@ -206,6 +206,17 @@ impl Param {
         })
     }
 
+    /// Check if a parameter is writable
+    ///
+    /// Returns True if the parameter can be set, False if it is read-only.
+    /// Raises an error if the parameter does not exist.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    fn is_writable(&self, name: &str) -> PyResult<bool> {
+        self.cf.param.is_writable(name).map_err(to_pyerr)
+    }
+
     /// Check if a parameter supports persistent storage
     ///
     /// Returns False for parameters that do not support persistence.

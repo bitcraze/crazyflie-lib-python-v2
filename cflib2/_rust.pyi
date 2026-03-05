@@ -1112,6 +1112,16 @@ class Param:
         - The value is out of range for the parameter type
         - The value cannot be represented accurately (e.g., fractional value for integer param)
         """
+    def is_writable(self, name: builtins.str) -> builtins.bool:
+        r"""
+        Check if a parameter is writable
+
+        Returns True if the parameter can be set, False if it is read-only.
+        Raises an error if the parameter does not exist.
+
+        # Arguments
+        * `name` - Parameter name in format "group.name"
+        """
     async def is_persistent(self, name: builtins.str) -> bool:
         r"""
         Check if a parameter supports persistent storage
