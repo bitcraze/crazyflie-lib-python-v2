@@ -145,10 +145,9 @@ impl Platform {
     fn get_app_channel<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            if let Some((tx, rx)) = cf.platform.get_app_channel().await {
-                Ok(Some(AppChannel::new(tx, rx)))
-            } else {
-                Ok(None)
+            match cf.platform.get_app_channel().await {
+                Some((tx, rx)) => Ok(Some(AppChannel::new(tx, rx))),
+                None => Ok(None),
             }
         })
     }
