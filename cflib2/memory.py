@@ -22,6 +22,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """Memory subsystem types"""
 
-from cflib2._rust import CompressedSegment, CompressedStart, Memory, Poly, Poly4D
+from cflib2._rust import CompressedSegment, CompressedStart, LedRingColor, Memory, Poly, Poly4D
 
-__all__ = ["CompressedSegment", "CompressedStart", "Memory", "Poly", "Poly4D"]
+__all__ = ["CompressedSegment", "CompressedStart", "LedRingColor", "Memory", "Poly", "Poly4D"]

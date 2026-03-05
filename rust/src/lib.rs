@@ -38,7 +38,7 @@ use subsystems::{
     Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, Platform, AppChannel,
     Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning,
     LighthouseAngleData, LighthouseAngles,
-    Memory, Poly, Poly4D, CompressedStart, CompressedSegment,
+    Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
 };
 use toc_cache::{NoTocCache, InMemoryTocCache, FileTocCache};
 
@@ -69,6 +69,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Poly4D>()?;
     m.add_class::<CompressedStart>()?;
     m.add_class::<CompressedSegment>()?;
+    m.add_class::<LedRingColor>()?;
     m.add_class::<NoTocCache>()?;
     m.add_class::<InMemoryTocCache>()?;
     m.add_class::<FileTocCache>()?;
