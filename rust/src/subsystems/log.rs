@@ -26,6 +26,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::error::to_pyerr;
+use crate::value::value_to_python;
 
 /// Log data returned by LogStream.next()
 #[gen_stub_pyclass]
@@ -226,20 +227,7 @@ impl LogStream {
             Python::attach(|py| {
                 let data = PyDict::new(py);
                 for (name, value) in log_data.data {
-                    let py_value = match value {
-                        crazyflie_lib::Value::U8(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::U16(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::U32(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::U64(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::I8(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::I16(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::I32(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::I64(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::F16(v) => v.to_f32().into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::F32(v) => v.into_pyobject(py)?.into_any().unbind(),
-                        crazyflie_lib::Value::F64(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    };
-                    data.set_item(name, py_value)?;
+                    data.set_item(name, value_to_python(py, value)?)?;
                 }
 
                 Ok(LogData {

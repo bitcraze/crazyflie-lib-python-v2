@@ -36,5 +36,5 @@ pub use high_level_commander::HighLevelCommander;
 pub use localization::{Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning, LighthouseAngleData, LighthouseAngles};
 pub use log::{Log, LogBlock, LogData, LogStream};
 pub use memory::{Memory, Poly, Poly4D, CompressedStart, CompressedSegment};
-pub use param::Param;
+pub use param::{Param, PersistentParamState};
 pub use platform::{Platform, AppChannel};

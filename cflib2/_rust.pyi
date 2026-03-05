@@ -1112,6 +1112,85 @@ class Param:
         - The value is out of range for the parameter type
         - The value cannot be represented accurately (e.g., fractional value for integer param)
         """
+    async def is_persistent(self, name: builtins.str) -> bool:
+        r"""
+        Check if a parameter supports persistent storage
+
+        Returns False for parameters that do not support persistence.
+        Raises an error if the parameter does not exist.
+
+        # Arguments
+        * `name` - Parameter name in format "group.name"
+        """
+    async def get_default_value(self, name: builtins.str) -> int | float:
+        r"""
+        Get the firmware's default value for a parameter
+
+        Raises an error if the parameter is read-only or does not exist.
+
+        # Arguments
+        * `name` - Parameter name in format "group.name"
+
+        # Returns
+        The default value (int or float depending on parameter type)
+        """
+    async def persistent_get_state(self, name: builtins.str) -> PersistentParamState:
+        r"""
+        Get the persistent storage state of a parameter
+
+        Returns a PersistentParamState with:
+        - `is_stored`: True if a value is currently in persistent storage
+        - `default_value`: The firmware's default value
+        - `stored_value`: The stored value, or None if not stored
+
+        Raises an error if the parameter does not exist or is not persistent.
+
+        # Arguments
+        * `name` - Parameter name in format "group.name"
+        """
+    async def persistent_store(self, name: builtins.str) -> None:
+        r"""
+        Store the current parameter value to persistent storage
+
+        The parameter's current value (set with `set()`) will be saved so that
+        it persists across reboots. Raises an error if the parameter does not
+        exist or is not persistent.
+
+        # Arguments
+        * `name` - Parameter name in format "group.name"
+        """
+    async def persistent_clear(self, name: builtins.str) -> None:
+        r"""
+        Clear the stored value from persistent storage
+
+        After clearing, the parameter will revert to the firmware default on
+        the next reboot. Raises an error if the parameter does not exist or
+        is not persistent.
+
+        # Arguments
+        * `name` - Parameter name in format "group.name"
+        """
+
+@typing.final
+class PersistentParamState:
+    r"""
+    State of a persistent parameter returned by `Param.persistent_get_state()`
+    """
+    @property
+    def is_stored(self) -> bool:
+        r"""
+        True if a value is currently stored in persistent storage
+        """
+    @property
+    def default_value(self) -> int | float:
+        r"""
+        The firmware's default value for this parameter
+        """
+    @property
+    def stored_value(self) -> int | float | None:
+        r"""
+        The value stored in persistent storage, or None if not stored
+        """
 
 @typing.final
 class Platform:
