@@ -80,8 +80,6 @@ async def main() -> None:
             )
     except KeyboardInterrupt:
         print("\nStopping...")
-    except Exception as e:
-        print(f"\nError: {e}")
     finally:
         await log_stream.stop()
         await cf.disconnect()

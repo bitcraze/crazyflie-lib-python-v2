@@ -101,22 +101,17 @@ async def main() -> int:
 
         start_time = time.time()
 
-        try:
-            cf = await Crazyflie.connect_from_uri(context, args.uri, toc_cache=cache)
-            connect_time = time.time() - start_time
-            connection_times.append(connect_time)
+        cf = await Crazyflie.connect_from_uri(context, args.uri, toc_cache=cache)
+        connect_time = time.time() - start_time
+        connection_times.append(connect_time)
 
-            print(f"{connect_time:.3f}s")
+        print(f"{connect_time:.3f}s")
 
-            await cf.disconnect()
+        await cf.disconnect()
 
-            # Brief pause between connections
-            if attempt < args.connections:
-                await asyncio.sleep(0.5)
-
-        except Exception as e:
-            print(f"FAILED - {e}")
-            return 1
+        # Brief pause between connections
+        if attempt < args.connections:
+            await asyncio.sleep(0.5)
 
     # Print summary
     print(f"\nConnection times: {', '.join(f'{t:.3f}s' for t in connection_times)}")

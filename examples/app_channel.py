@@ -120,8 +120,6 @@ async def main() -> None:
         print("\n" + "-" * 60)
         print("All tests passed! ✓")
 
-    except ValueError as e:
-        print(f"\nError: {e}")
     except KeyboardInterrupt:
         print("\n" + "-" * 60)
         print("Interrupted by user")

@@ -121,9 +121,6 @@ async def main() -> None:
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
 
-    except Exception as e:
-        print(f"\n✗ Error: {e}")
-
     finally:
         print("\nDisconnecting...")
         await cf.disconnect()

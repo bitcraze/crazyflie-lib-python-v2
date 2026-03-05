@@ -45,45 +45,31 @@ async def main() -> None:
 
     hlc = cf.high_level_commander()
 
-    print("Taking off...")
     try:
+        print("Taking off...")
         await hlc.take_off(0.5, None, 2.0, None)
         await asyncio.sleep(2.0)
-    except Exception as e:
-        print(f"Take-off failed: {e}")
 
-    print("Going to first position...")
-    try:
+        print("Going to first position...")
         await hlc.go_to(0.0, 0.5, 0.5, 0.0, 2.0, False, False, None)
         await asyncio.sleep(2.0)
-    except Exception as e:
-        print(f"Go-to failed: {e}")
 
-    print("Going to second position...")
-    try:
+        print("Going to second position...")
         await hlc.go_to(-0.25, 0.0, 0.5, 0.0, 2.0, False, False, None)
         await asyncio.sleep(2.0)
-    except Exception as e:
-        print(f"Go-to failed: {e}")
 
-    print("Moving in a spiral...")
-    try:
+        print("Moving in a spiral...")
         await hlc.spiral(-math.pi * 2.0, 0.5, 0.5, 0.0, 2.0, True, True, None)
         await asyncio.sleep(2.0)
-    except Exception as e:
-        print(f"Spiral failed: {e}")
-
-    print("Landing...")
-    try:
+    finally:
+        print("Landing...")
         await hlc.land(0.0, None, 2.0, None)
         await asyncio.sleep(2.0)
-    except Exception as e:
-        print(f"Landing failed: {e}")
 
-    await hlc.stop(None)
-    print("Done")
+        await hlc.stop(None)
+        print("Done")
 
-    await cf.disconnect()
+        await cf.disconnect()
 
 
 if __name__ == "__main__":
