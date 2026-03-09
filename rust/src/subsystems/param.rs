@@ -26,6 +26,41 @@ use pyo3_stub_gen_derive::*;
 use std::sync::Arc;
 
 use crate::error::to_pyerr;
+use crate::value::value_to_python;
+
+/// State of a persistent parameter returned by `Param.persistent_get_state()`
+#[gen_stub_pyclass]
+#[pyclass]
+pub struct PersistentParamState {
+    is_stored: bool,
+    default_value: Py<PyAny>,
+    stored_value: Py<PyAny>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PersistentParamState {
+    /// True if a value is currently stored in persistent storage
+    #[getter]
+    #[gen_stub(override_return_type(type_repr = "bool"))]
+    fn is_stored(&self) -> bool {
+        self.is_stored
+    }
+
+    /// The firmware's default value for this parameter
+    #[getter]
+    #[gen_stub(override_return_type(type_repr = "int | float"))]
+    fn default_value(&self, py: Python<'_>) -> Py<PyAny> {
+        self.default_value.clone_ref(py)
+    }
+
+    /// The value stored in persistent storage, or None if not stored
+    #[getter]
+    #[gen_stub(override_return_type(type_repr = "int | float | None"))]
+    fn stored_value(&self, py: Python<'_>) -> Py<PyAny> {
+        self.stored_value.clone_ref(py)
+    }
+}
 
 /// Access to the Crazyflie Param Subsystem
 ///
@@ -88,25 +123,8 @@ impl Param {
     fn get<'py>(&self, py: Python<'py>, name: String) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let value: crazyflie_lib::Value = cf.param.get(&name).await.map_err(to_pyerr)?;
-
-            // Convert Rust Value to Python object
-            // We need to acquire the GIL to create Python objects
-            Python::attach(|py| {
-                Ok(match value {
-                    crazyflie_lib::Value::U8(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::U16(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::U32(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::U64(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::I8(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::I16(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::I32(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::I64(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::F16(v) => v.to_f32().into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::F32(v) => v.into_pyobject(py)?.into_any().unbind(),
-                    crazyflie_lib::Value::F64(v) => v.into_pyobject(py)?.into_any().unbind(),
-                })
-            })
+            let value = cf.param.get(&name).await.map_err(to_pyerr)?;
+            Python::attach(|py| value_to_python(py, value))
         })
     }
 
@@ -185,6 +203,112 @@ impl Param {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             cf.param.set(&name, rust_value).await.map_err(to_pyerr)?;
             Ok(())
+        })
+    }
+
+    /// Check if a parameter is writable
+    ///
+    /// Returns True if the parameter can be set, False if it is read-only.
+    /// Raises an error if the parameter does not exist.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    fn is_writable(&self, name: &str) -> PyResult<bool> {
+        self.cf.param.is_writable(name).map_err(to_pyerr)
+    }
+
+    /// Check if a parameter supports persistent storage
+    ///
+    /// Returns False for parameters that do not support persistence.
+    /// Raises an error if the parameter does not exist.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, bool]"))]
+    fn is_persistent<'py>(&self, py: Python<'py>, name: String) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            cf.param.is_persistent(&name).await.map_err(to_pyerr)
+        })
+    }
+
+    /// Get the firmware's default value for a parameter
+    ///
+    /// Raises an error if the parameter is read-only or does not exist.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    ///
+    /// # Returns
+    /// The default value (int or float depending on parameter type)
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, int | float]"))]
+    fn get_default_value<'py>(&self, py: Python<'py>, name: String) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let value = cf.param.get_default_value(&name).await.map_err(to_pyerr)?;
+            Python::attach(|py| value_to_python(py, value))
+        })
+    }
+
+    /// Get the persistent storage state of a parameter
+    ///
+    /// Returns a PersistentParamState with:
+    /// - `is_stored`: True if a value is currently in persistent storage
+    /// - `default_value`: The firmware's default value
+    /// - `stored_value`: The stored value, or None if not stored
+    ///
+    /// Raises an error if the parameter does not exist or is not persistent.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, PersistentParamState]"))]
+    fn persistent_get_state<'py>(&self, py: Python<'py>, name: String) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let state = cf.param.persistent_get_state(&name).await.map_err(to_pyerr)?;
+            Python::attach(|py| {
+                let stored = match state.stored_value {
+                    Some(v) => value_to_python(py, v)?,
+                    None => py.None(),
+                };
+                Ok(PersistentParamState {
+                    is_stored: state.is_stored,
+                    default_value: value_to_python(py, state.default_value)?,
+                    stored_value: stored,
+                })
+            })
+        })
+    }
+
+    /// Store the current parameter value to persistent storage
+    ///
+    /// The parameter's current value (set with `set()`) will be saved so that
+    /// it persists across reboots. Raises an error if the parameter does not
+    /// exist or is not persistent.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn persistent_store<'py>(&self, py: Python<'py>, name: String) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            cf.param.persistent_store(&name).await.map_err(to_pyerr)
+        })
+    }
+
+    /// Clear the stored value from persistent storage
+    ///
+    /// After clearing, the parameter will revert to the firmware default on
+    /// the next reboot. Raises an error if the parameter does not exist or
+    /// is not persistent.
+    ///
+    /// # Arguments
+    /// * `name` - Parameter name in format "group.name"
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn persistent_clear<'py>(&self, py: Python<'py>, name: String) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            cf.param.persistent_clear(&name).await.map_err(to_pyerr)
         })
     }
 }

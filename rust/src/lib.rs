@@ -30,11 +30,12 @@ mod error;
 mod link_context;
 pub mod subsystems;
 mod toc_cache;
+pub mod value;
 
 use crazyflie::Crazyflie;
 use link_context::LinkContext;
 use subsystems::{
-    Commander, Console, Log, LogBlock, LogData, LogStream, Param, Platform, AppChannel,
+    Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, Platform, AppChannel,
     Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning,
     LighthouseAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment,
@@ -53,6 +54,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<LogData>()?;
     m.add_class::<LogStream>()?;
     m.add_class::<Param>()?;
+    m.add_class::<PersistentParamState>()?;
     m.add_class::<Platform>()?;
     m.add_class::<AppChannel>()?;
     m.add_class::<Localization>()?;
