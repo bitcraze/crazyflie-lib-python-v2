@@ -324,7 +324,7 @@ class Crazyflie:
         r"""
         Disconnect from the Crazyflie
         """
-    async def wait_disconnect(self) -> str:
+    async def wait_disconnect(self) -> builtins.str:
         r"""
         Wait for the Crazyflie to be disconnected
 

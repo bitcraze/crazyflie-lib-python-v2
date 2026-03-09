@@ -137,7 +137,7 @@ impl Crazyflie {
     /// Wait for the Crazyflie to be disconnected
     ///
     /// Returns a human-readable string describing the reason for disconnection.
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, str]"))]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.str]"))]
     fn wait_disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
