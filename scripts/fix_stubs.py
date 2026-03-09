@@ -99,6 +99,12 @@ def fix_stubs(content: str) -> str:
     if "collections.abc." not in result.split("import collections.abc\n")[-1]:
         result = result.replace("import collections.abc\n", "")
 
+    # pyo3_stub_gen's create_exception! macro qualifies custom exception base
+    # classes with `builtins.` (e.g. `builtins.CrazyflieError`).  Only the
+    # root `CrazyflieError(builtins.Exception)` is correct; subclasses must
+    # reference the module-level name directly.
+    result = result.replace("builtins.CrazyflieError", "CrazyflieError")
+
     return result
 
 

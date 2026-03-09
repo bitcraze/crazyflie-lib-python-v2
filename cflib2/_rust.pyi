@@ -40,6 +40,13 @@ class AppChannel:
         * List of received data packets (each up to 31 bytes)
         """
 
+class AppchannelPacketTooLargeError(CrazyflieError):
+    r"""
+    App channel packet exceeds MTU.
+    """
+
+    ...
+
 @typing.final
 class Commander:
     r"""
@@ -273,6 +280,13 @@ class Console:
             List of console output lines (up to 100 with 10ms timeout)
         """
 
+class ConversionError(CrazyflieError):
+    r"""
+    Value conversion error.
+    """
+
+    ...
+
 @typing.final
 class Crazyflie:
     r"""
@@ -344,6 +358,20 @@ class Crazyflie:
         """
     def __str__(self) -> builtins.str: ...
     def __repr__(self) -> builtins.str: ...
+
+class CrazyflieError(builtins.Exception):
+    r"""
+    Base exception for all Crazyflie errors.
+    """
+
+    ...
+
+class DisconnectedError(CrazyflieError):
+    r"""
+    Crazyflie is disconnected.
+    """
+
+    ...
 
 @typing.final
 class EmergencyControl:
@@ -657,6 +685,20 @@ class InMemoryTocCache:
         Get the number of cached TOCs
         """
 
+class InvalidArgumentError(CrazyflieError):
+    r"""
+    Invalid argument.
+    """
+
+    ...
+
+class InvalidParameterError(CrazyflieError):
+    r"""
+    Invalid parameter.
+    """
+
+    ...
+
 @typing.final
 class Lighthouse:
     r"""
@@ -762,6 +804,13 @@ class LinkContext:
         # Returns
         List of URIs found
         """
+
+class LinkError(CrazyflieError):
+    r"""
+    Crazyflie link error.
+    """
+
+    ...
 
 @typing.final
 class Localization:
@@ -909,6 +958,13 @@ class LogData:
         Dictionary of variable name to value
         """
 
+class LogError(CrazyflieError):
+    r"""
+    Log subsystem error.
+    """
+
+    ...
+
 @typing.final
 class LogStream:
     r"""
@@ -1027,6 +1083,13 @@ class Memory:
         * `address` - Address in memory to read from
         * `length` - Number of bytes to read
         """
+
+class MemoryError(CrazyflieError):
+    r"""
+    Memory subsystem error.
+    """
+
+    ...
 
 @typing.final
 class NoTocCache:
@@ -1181,6 +1244,13 @@ class Param:
         * `name` - Parameter name in format "group.name"
         """
 
+class ParamError(CrazyflieError):
+    r"""
+    Parameter subsystem error.
+    """
+
+    ...
+
 @typing.final
 class PersistentParamState:
     r"""
@@ -1330,3 +1400,38 @@ class Poly4D:
     def __new__(
         cls, duration: builtins.float, x: Poly, y: Poly, z: Poly, yaw: Poly
     ) -> Poly4D: ...
+
+class ProtocolError(CrazyflieError):
+    r"""
+    Unexpected protocol error.
+    """
+
+    ...
+
+class ProtocolVersionNotSupportedError(CrazyflieError):
+    r"""
+    Protocol version not supported.
+    """
+
+    ...
+
+class SystemError(CrazyflieError):
+    r"""
+    Async executor error.
+    """
+
+    ...
+
+class TimeoutError(CrazyflieError):
+    r"""
+    Operation timed out.
+    """
+
+    ...
+
+class VariableNotFoundError(CrazyflieError):
+    r"""
+    Variable not found in TOC.
+    """
+
+    ...
