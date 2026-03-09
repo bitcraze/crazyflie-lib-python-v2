@@ -29,6 +29,22 @@ from cflib2._rust import (
     NoTocCache,
     InMemoryTocCache,
     FileTocCache,
+    # Exceptions
+    CrazyflieError,
+    ProtocolVersionNotSupportedError,
+    ProtocolError,
+    ParamError,
+    LogError,
+    ConversionError,
+    LinkError,
+    DisconnectedError,
+    VariableNotFoundError,
+    SystemError,
+    AppchannelPacketTooLargeError,
+    InvalidArgumentError,
+    TimeoutError,
+    MemoryError,
+    InvalidParameterError,
 )
 
 __all__ = [
@@ -37,4 +53,20 @@ __all__ = [
     "NoTocCache",
     "InMemoryTocCache",
     "FileTocCache",
+    # Exceptions
+    "CrazyflieError",
+    "ProtocolVersionNotSupportedError",
+    "ProtocolError",
+    "ParamError",
+    "LogError",
+    "ConversionError",
+    "LinkError",
+    "DisconnectedError",
+    "VariableNotFoundError",
+    "SystemError",
+    "AppchannelPacketTooLargeError",
+    "InvalidArgumentError",
+    "TimeoutError",
+    "MemoryError",
+    "InvalidParameterError",
 ]

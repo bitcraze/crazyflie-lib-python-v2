@@ -72,6 +72,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<NoTocCache>()?;
     m.add_class::<InMemoryTocCache>()?;
     m.add_class::<FileTocCache>()?;
+    error::register_exceptions(m)?;
     Ok(())
 }
 
