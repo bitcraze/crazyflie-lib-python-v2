@@ -324,6 +324,12 @@ class Crazyflie:
         r"""
         Disconnect from the Crazyflie
         """
+    async def wait_disconnect(self) -> str:
+        r"""
+        Wait for the Crazyflie to be disconnected
+
+        Returns a human-readable string describing the reason for disconnection.
+        """
     def commander(self) -> Commander:
         r"""
         Get the commander subsystem
