@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#
 # ,---------,       ____  _ __
 # |  ,-^-,  |      / __ )(_) /_______________ _____  ___
 # | (  O  ) |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
@@ -18,8 +20,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""Trajectory building primitives for the Crazyflie"""
+"""Commander subsystem types"""
 
-from cflib2._rust import Poly, Poly4D, CompressedStart, CompressedSegment
+from cflib2._rust import Commander
 
-__all__ = ["Poly", "Poly4D", "CompressedStart", "CompressedSegment"]
+__all__ = ["Commander"]

@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+#
 # ,---------,       ____  _ __
 # |  ,-^-,  |      / __ )(_) /_______________ _____  ___
 # | (  O  ) |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
 # | / ,--'  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
 #    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
 #
-# Copyright (C) 2026 Bitcraze AB
+# Copyright (C) 2025 Bitcraze AB
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,18 +20,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-import pytest
+"""High-level commander subsystem types"""
 
-from cflib2 import error
+from cflib2._rust import HighLevelCommander
 
-
-EXCEPTION_NAMES = [name for name in error.__all__ if name.endswith("Error")]
-
-
-class TestExceptionHierarchy:
-    """Verify that all custom exceptions inherit from CrazyflieError."""
-
-    @pytest.mark.parametrize("name", EXCEPTION_NAMES)
-    def test_exception_is_subclass_of_crazyflie_error(self, name: str) -> None:
-        exc_class = getattr(error, name)
-        assert issubclass(exc_class, error.CrazyflieError)
+__all__ = ["HighLevelCommander"]
