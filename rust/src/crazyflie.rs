@@ -124,6 +124,51 @@ impl Crazyflie {
         })
     }
 
+    /// Power off the STM32 and deck subsystem
+    ///
+    /// Cuts power to the STM32 and decks while keeping the nRF51 powered.
+    /// The Crazyflie can be powered on again using `power_on_stm32()`.
+    /// This does not require a full connection.
+    #[staticmethod]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn power_off_stm32<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
+        let inner = link_context.inner.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            crazyflie_lib::Crazyflie::power_off_stm32(&inner, &uri).await.map_err(to_pyerr)?;
+            Ok(())
+        })
+    }
+
+    /// Power on the STM32 and deck subsystem
+    ///
+    /// Powers the STM32 and decks back on after a `power_off_stm32()`.
+    /// This does not require a full connection.
+    #[staticmethod]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn power_on_stm32<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
+        let inner = link_context.inner.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            crazyflie_lib::Crazyflie::power_on_stm32(&inner, &uri).await.map_err(to_pyerr)?;
+            Ok(())
+        })
+    }
+
+    /// Power off the Crazyflie completely
+    ///
+    /// Powers off the nRF51, STM32, and deck subsystem. Equivalent to
+    /// pressing the power button. The Crazyflie cannot be woken up via
+    /// radio after this.
+    /// This does not require a full connection.
+    #[staticmethod]
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn power_off_all<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
+        let inner = link_context.inner.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            crazyflie_lib::Crazyflie::power_off_all(&inner, &uri).await.map_err(to_pyerr)?;
+            Ok(())
+        })
+    }
+
     /// Disconnect from the Crazyflie
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
     fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
