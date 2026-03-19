@@ -22,7 +22,7 @@
 //! Link context for scanning and discovering Crazyflies
 
 use pyo3::prelude::*;
-use pyo3::exceptions::PyRuntimeError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3_stub_gen_derive::*;
 use std::sync::Arc;
 
@@ -65,7 +65,7 @@ impl LinkContext {
         // Default to E7E7E7E7E7 if no address provided
         let addr = if let Some(addr_vec) = address {
             if addr_vec.len() != 5 {
-                return Err(PyRuntimeError::new_err(
+                return Err(PyValueError::new_err(
                     "Address must be exactly 5 bytes"
                 ));
             }
@@ -81,6 +81,36 @@ impl LinkContext {
             let uris = inner.scan(addr).await
                 .map_err(|e| PyRuntimeError::new_err(format!("Scan failed: {:?}", e)))?;
             Ok(uris.into_iter().map(|uri| uri.to_string()).collect::<Vec<_>>())
+        })
+    }
+
+    /// Send a radio broadcast packet (no acknowledgement) on a specific radio and channel
+    ///
+    /// This sends a raw packet without expecting an ack, useful for P2P communication.
+    ///
+    /// # Arguments
+    /// * `radio_nth` - Radio dongle index (usually 0)
+    /// * `channel` - Radio channel number (0-125)
+    /// * `address` - 5-byte destination address
+    /// * `data` - Packet payload bytes
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn send_radio_broadcast<'py>(&self, py: Python<'py>, radio_nth: usize, channel: u8, address: Vec<u8>, data: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
+        if address.len() != 5 {
+            return Err(PyValueError::new_err("Address must be exactly 5 bytes"));
+        }
+        let mut addr_array = [0u8; 5];
+        addr_array.copy_from_slice(&address);
+
+        let ch = crazyradio::Channel::from_number(channel)
+            .map_err(|_| PyValueError::new_err(format!("Invalid channel {}: must be 0-125", channel)))?;
+
+        let inner = self.inner.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let mut radio = inner.get_radio(radio_nth).await
+                .map_err(|e| PyRuntimeError::new_err(format!("Failed to get radio: {:?}", e)))?;
+            radio.send_packet_no_ack_async(ch, addr_array, data).await
+                .map_err(|e| PyRuntimeError::new_err(format!("Broadcast failed: {:?}", e)))?;
+            Ok(())
         })
     }
 }

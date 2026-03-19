@@ -108,6 +108,7 @@ version = "0.1.0"
 dependencies = [
  "crazyflie-lib",
  "crazyflie-link",
+ "crazyradio",
  "futures",
  "pyo3",
  "pyo3-async-runtimes",
@@ -190,9 +191,9 @@ dependencies = [
 
 [[package]]
 name = "crazyflie-link"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7aa54c1b5e50767eb2a04aea44a8ae172e11ff52745a32c670bd415a206374e"
+checksum = "c546b30f976817451936078445d21d5efecbe2033fc3ea25e8fac99d37e733d9"
 dependencies = [
  "async-trait",
  "bitflags",
@@ -212,9 +213,9 @@ dependencies = [
 
 [[package]]
 name = "crazyradio"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89cabf480d2a2bba8ad41426a8486be4581459ca360a522a14836cde64ead1bf"
+checksum = "fb0ef9ca124036f6ae818da8529ce53da1bae563b88fc3ca847c78c6258bb989"
 dependencies = [
  "flume",
  "rusb",
