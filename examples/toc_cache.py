@@ -49,7 +49,8 @@ from typing import Literal, Union
 
 import tyro
 
-from cflib2 import Crazyflie, LinkContext, NoTocCache, InMemoryTocCache, FileTocCache
+from cflib2 import Crazyflie, LinkContext
+from cflib2.toc_cache import FileTocCache, InMemoryTocCache, NoTocCache
 
 
 @dataclass

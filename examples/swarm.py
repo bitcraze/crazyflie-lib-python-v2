@@ -40,7 +40,8 @@ from pathlib import Path
 
 import tyro
 
-from cflib2 import Crazyflie, LinkContext, FileTocCache, NoTocCache
+from cflib2 import Crazyflie, LinkContext
+from cflib2.toc_cache import FileTocCache, NoTocCache
 
 
 @dataclass

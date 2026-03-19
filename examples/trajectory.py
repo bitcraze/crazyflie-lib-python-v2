@@ -41,7 +41,7 @@ from dataclasses import dataclass
 import tyro
 
 from cflib2 import Crazyflie, LinkContext
-from cflib2.trajectory import Poly, Poly4D
+from cflib2.memory import Poly, Poly4D
 
 # The trajectory to fly
 # See https://github.com/whoenig/uav_trajectories for a tool to generate
