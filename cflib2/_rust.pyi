@@ -320,6 +320,37 @@ class Crazyflie:
         Returns:
             Connected Crazyflie instance
         """
+    @staticmethod
+    async def power_off_stm32_domain(
+        link_context: LinkContext, uri: builtins.str
+    ) -> None:
+        r"""
+        Power off the STM32 and deck subsystem
+
+        Cuts power to the STM32 and decks while keeping the nRF51 powered.
+        The Crazyflie can be powered on again using `power_on_stm32_domain()`.
+        This does not require a full connection.
+        """
+    @staticmethod
+    async def power_on_stm32_domain(
+        link_context: LinkContext, uri: builtins.str
+    ) -> None:
+        r"""
+        Power on the STM32 and deck subsystem
+
+        Powers the STM32 and decks back on after a `power_off_stm32_domain()`.
+        This does not require a full connection.
+        """
+    @staticmethod
+    async def power_off_all(link_context: LinkContext, uri: builtins.str) -> None:
+        r"""
+        Power off the Crazyflie completely
+
+        Powers off the nRF51, STM32, and deck subsystem. Equivalent to
+        pressing the power button. The Crazyflie cannot be woken up via
+        radio after this.
+        This does not require a full connection.
+        """
     async def disconnect(self) -> None:
         r"""
         Disconnect from the Crazyflie
