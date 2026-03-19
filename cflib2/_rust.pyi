@@ -841,6 +841,24 @@ class LinkContext:
         # Returns
         List of URIs found
         """
+    async def send_radio_broadcast(
+        self,
+        radio_nth: builtins.int,
+        channel: builtins.int,
+        address: typing.Sequence[builtins.int],
+        data: typing.Sequence[builtins.int],
+    ) -> None:
+        r"""
+        Send a radio broadcast packet (no acknowledgement) on a specific radio and channel
+
+        This sends a raw packet without expecting an ack, useful for P2P communication.
+
+        # Arguments
+        * `radio_nth` - Radio dongle index (usually 0)
+        * `channel` - Radio channel number (0-125)
+        * `address` - 5-byte destination address
+        * `data` - Packet payload bytes
+        """
 
 class LinkError(CrazyflieError):
     r"""
