@@ -84,7 +84,7 @@ impl LinkContext {
         })
     }
 
-    /// Send a broadcast packet (no acknowledgement) on a specific radio and channel
+    /// Send a radio broadcast packet (no acknowledgement) on a specific radio and channel
     ///
     /// This sends a raw packet without expecting an ack, useful for P2P communication.
     ///
@@ -94,7 +94,7 @@ impl LinkContext {
     /// * `address` - 5-byte destination address
     /// * `data` - Packet payload bytes
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn send_broadcast<'py>(&self, py: Python<'py>, radio_nth: usize, channel: u8, address: Vec<u8>, data: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
+    fn send_radio_broadcast<'py>(&self, py: Python<'py>, radio_nth: usize, channel: u8, address: Vec<u8>, data: Vec<u8>) -> PyResult<Bound<'py, PyAny>> {
         if address.len() != 5 {
             return Err(PyRuntimeError::new_err("Address must be exactly 5 bytes"));
         }
