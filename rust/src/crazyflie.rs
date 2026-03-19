@@ -127,28 +127,28 @@ impl Crazyflie {
     /// Power off the STM32 and deck subsystem
     ///
     /// Cuts power to the STM32 and decks while keeping the nRF51 powered.
-    /// The Crazyflie can be powered on again using `power_on_stm32()`.
+    /// The Crazyflie can be powered on again using `power_on_stm32_domain()`.
     /// This does not require a full connection.
     #[staticmethod]
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn power_off_stm32<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
+    fn power_off_stm32_domain<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
         let inner = link_context.inner.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            crazyflie_lib::Crazyflie::power_off_stm32(&inner, &uri).await.map_err(to_pyerr)?;
+            crazyflie_lib::Crazyflie::power_off_stm32_domain(&inner, &uri).await.map_err(to_pyerr)?;
             Ok(())
         })
     }
 
     /// Power on the STM32 and deck subsystem
     ///
-    /// Powers the STM32 and decks back on after a `power_off_stm32()`.
+    /// Powers the STM32 and decks back on after a `power_off_stm32_domain()`.
     /// This does not require a full connection.
     #[staticmethod]
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn power_on_stm32<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
+    fn power_on_stm32_domain<'py>(py: Python<'py>, link_context: &LinkContext, uri: String) -> PyResult<Bound<'py, PyAny>> {
         let inner = link_context.inner.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            crazyflie_lib::Crazyflie::power_on_stm32(&inner, &uri).await.map_err(to_pyerr)?;
+            crazyflie_lib::Crazyflie::power_on_stm32_domain(&inner, &uri).await.map_err(to_pyerr)?;
             Ok(())
         })
     }
