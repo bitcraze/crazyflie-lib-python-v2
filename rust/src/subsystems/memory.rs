@@ -51,7 +51,7 @@ pub struct LedRingColor {
     /// Blue component (0-255)
     #[pyo3(get, set)]
     b: u8,
-    /// Intensity percentage (0-100); values above 100 are clamped to 100
+    /// Intensity percentage (0-100); values above 100 are clamped to 100 at write time
     #[pyo3(get, set)]
     intensity: u8,
 }
@@ -65,11 +65,11 @@ impl LedRingColor {
     /// * `r` - Red component (0-255, default 0)
     /// * `g` - Green component (0-255, default 0)
     /// * `b` - Blue component (0-255, default 0)
-    /// * `intensity` - Intensity percentage (0-100, default 100); clamped to 100 if higher
+    /// * `intensity` - Intensity percentage (0-100, default 100); values above 100 are clamped to 100 at write time
     #[new]
     #[pyo3(signature = (r=0, g=0, b=0, intensity=100))]
     fn new(r: u8, g: u8, b: u8, intensity: u8) -> Self {
-        Self { r, g, b, intensity: intensity.min(100) }
+        Self { r, g, b, intensity }
     }
 
     /// Set R/G/B and optionally intensity in one call.
@@ -78,14 +78,14 @@ impl LedRingColor {
     /// * `r` - Red component (0-255)
     /// * `g` - Green component (0-255)
     /// * `b` - Blue component (0-255)
-    /// * `intensity` - Intensity percentage (0-100); if None, keeps current value; clamped to 100 if higher
+    /// * `intensity` - Intensity percentage (0-100); if None, keeps current value; values above 100 are clamped to 100 at write time
     #[pyo3(signature = (r, g, b, intensity=None))]
     fn set(&mut self, r: u8, g: u8, b: u8, intensity: Option<u8>) {
         self.r = r;
         self.g = g;
         self.b = b;
         if let Some(i) = intensity {
-            self.intensity = i.min(100);
+            self.intensity = i;
         }
     }
 }
