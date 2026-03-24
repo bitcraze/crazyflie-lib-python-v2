@@ -450,8 +450,11 @@ impl Memory {
                 led_mem.leds[i].intensity = led.intensity;
             }
 
-            led_mem.write_leds().await.map_err(to_pyerr)?;
-            cf.memory.close_memory(led_mem).await.map_err(to_pyerr)?;
+            let write_result = led_mem.write_leds().await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(led_mem).await.map_err(to_pyerr);
+
+            write_result?;
+            close_result?;
 
             Ok(())
         })
