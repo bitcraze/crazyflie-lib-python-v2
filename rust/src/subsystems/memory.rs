@@ -21,10 +21,11 @@
 
 //! # Memory subsystem bindings
 //!
-//! Provides Python bindings for trajectory memory operations.
+//! Provides Python bindings for memory operations.
 //! Trajectory data is built in Python using [`Poly`], [`Poly4D`],
 //! [`CompressedStart`], and [`CompressedSegment`], then uploaded
-//! via the [`Memory`] subsystem.
+//! via the [`Memory`] subsystem. LED ring colors are set using
+//! [`LedRingColor`] and written via [`Memory::write_led_ring`].
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
@@ -33,6 +34,66 @@ use std::sync::Arc;
 
 use crate::error::to_pyerr;
 use crazyflie_lib::subsystems::memory::MemoryType;
+
+/// A single LED color and intensity for the Crazyflie LED ring.
+///
+/// Used to build the list of 12 LED values passed to `Memory.write_led_ring()`.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LedRingColor {
+    /// Red component (0-255)
+    #[pyo3(get, set)]
+    r: u8,
+    /// Green component (0-255)
+    #[pyo3(get, set)]
+    g: u8,
+    /// Blue component (0-255)
+    #[pyo3(get, set)]
+    b: u8,
+    /// Intensity percentage (0-100); values above 100 are clamped to 100
+    #[pyo3(get)]
+    intensity: u8,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LedRingColor {
+    /// Create a new LedRingColor.
+    ///
+    /// # Arguments
+    /// * `r` - Red component (0-255, default 0)
+    /// * `g` - Green component (0-255, default 0)
+    /// * `b` - Blue component (0-255, default 0)
+    /// * `intensity` - Intensity percentage (0-100, default 100); values above 100 are clamped to 100
+    #[new]
+    #[pyo3(signature = (r=0, g=0, b=0, intensity=100))]
+    fn new(r: u8, g: u8, b: u8, intensity: u8) -> Self {
+        Self { r, g, b, intensity: intensity.min(100) }
+    }
+
+    #[setter]
+    fn set_intensity(&mut self, value: u8) {
+        self.intensity = value.min(100);
+    }
+
+    /// Set R/G/B and optionally intensity in one call.
+    ///
+    /// # Arguments
+    /// * `r` - Red component (0-255)
+    /// * `g` - Green component (0-255)
+    /// * `b` - Blue component (0-255)
+    /// * `intensity` - Intensity percentage (0-100); if None, keeps current value; clamped to 100 if higher
+    #[pyo3(signature = (r, g, b, intensity=None))]
+    fn set(&mut self, r: u8, g: u8, b: u8, intensity: Option<u8>) {
+        self.r = r;
+        self.g = g;
+        self.b = b;
+        if let Some(i) = intensity {
+            self.intensity = i.min(100);
+        }
+    }
+}
 
 /// A polynomial with up to 8 coefficients.
 ///
@@ -349,6 +410,58 @@ impl Memory {
             cf.memory.close_memory(traj_mem).await.map_err(to_pyerr)?;
 
             Ok(bytes_written)
+        })
+    }
+
+    /// Write LED colors to the Crazyflie LED ring.
+    ///
+    /// Opens the LED driver memory, sets all 12 LED values, writes them to
+    /// the ring, and closes the memory.
+    ///
+    /// # Arguments
+    /// * `leds` - List of exactly 12 LedRingColor instances
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn write_led_ring<'py>(
+        &self,
+        py: Python<'py>,
+        leds: Vec<LedRingColor>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            if leds.len() != 12 {
+                return Err(PyValueError::new_err(
+                    format!("Expected 12 LEDs, got {}", leds.len())
+                ));
+            }
+
+            let memories = cf.memory.get_memories(Some(MemoryType::DriverLed));
+            let mem_device = (*memories.first()
+                .ok_or_else(|| to_pyerr(crazyflie_lib::Error::MemoryError(
+                    "No LED driver memory found on Crazyflie".to_owned()
+                )))?)
+                .clone();
+
+            let mut led_mem: crazyflie_lib::subsystems::memory::LedDriverMemory =
+                cf.memory.initialize_memory(mem_device).await
+                    .ok_or_else(|| to_pyerr(crazyflie_lib::Error::MemoryError(
+                        "Failed to open LED driver memory".to_owned()
+                    )))?
+                    .map_err(to_pyerr)?;
+
+            for (i, led) in leds.iter().enumerate() {
+                led_mem.leds[i].r = led.r;
+                led_mem.leds[i].g = led.g;
+                led_mem.leds[i].b = led.b;
+                led_mem.leds[i].intensity = led.intensity;
+            }
+
+            let write_result = led_mem.write_leds().await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(led_mem).await.map_err(to_pyerr);
+
+            write_result?;
+            close_result?;
+
+            Ok(())
         })
     }
 

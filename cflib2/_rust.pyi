@@ -737,6 +737,86 @@ class InvalidParameterError(CrazyflieError):
     ...
 
 @typing.final
+class LedRingColor:
+    r"""
+    A single LED color and intensity for the Crazyflie LED ring.
+
+    Used to build the list of 12 LED values passed to `Memory.write_led_ring()`.
+    """
+    @property
+    def r(self) -> builtins.int:
+        r"""
+        Red component (0-255)
+        """
+    @r.setter
+    def r(self, value: builtins.int) -> None:
+        r"""
+        Red component (0-255)
+        """
+    @property
+    def g(self) -> builtins.int:
+        r"""
+        Green component (0-255)
+        """
+    @g.setter
+    def g(self, value: builtins.int) -> None:
+        r"""
+        Green component (0-255)
+        """
+    @property
+    def b(self) -> builtins.int:
+        r"""
+        Blue component (0-255)
+        """
+    @b.setter
+    def b(self, value: builtins.int) -> None:
+        r"""
+        Blue component (0-255)
+        """
+    @property
+    def intensity(self) -> builtins.int:
+        r"""
+        Intensity percentage (0-100); values above 100 are clamped to 100
+        """
+    @intensity.setter
+    def intensity(self, value: builtins.int) -> None:
+        r"""
+        Intensity percentage (0-100); values above 100 are clamped to 100
+        """
+    def __new__(
+        cls,
+        r: builtins.int = 0,
+        g: builtins.int = 0,
+        b: builtins.int = 0,
+        intensity: builtins.int = 100,
+    ) -> LedRingColor:
+        r"""
+        Create a new LedRingColor.
+
+        # Arguments
+        * `r` - Red component (0-255, default 0)
+        * `g` - Green component (0-255, default 0)
+        * `b` - Blue component (0-255, default 0)
+        * `intensity` - Intensity percentage (0-100, default 100); clamped to 100 if higher
+        """
+    def set(
+        self,
+        r: builtins.int,
+        g: builtins.int,
+        b: builtins.int,
+        intensity: typing.Optional[builtins.int] = None,
+    ) -> None:
+        r"""
+        Set R/G/B and optionally intensity in one call.
+
+        # Arguments
+        * `r` - Red component (0-255)
+        * `g` - Green component (0-255)
+        * `b` - Blue component (0-255)
+        * `intensity` - Intensity percentage (0-100); if None, keeps current value; clamped to 100 if higher
+        """
+
+@typing.final
 class Lighthouse:
     r"""
     Lighthouse positioning system interface
@@ -1095,6 +1175,16 @@ class Memory:
         * `start` - CompressedStart defining the initial position
         * `segments` - List of CompressedSegment instances
         * `start_addr` - Address in trajectory memory (default 0)
+        """
+    async def write_led_ring(self, leds: typing.Sequence[LedRingColor]) -> None:
+        r"""
+        Write LED colors to the Crazyflie LED ring.
+
+        Opens the LED driver memory, sets all 12 LED values, writes them to
+        the ring, and closes the memory.
+
+        # Arguments
+        * `leds` - List of exactly 12 LedRingColor instances
         """
     def get_memories(
         self, memory_type: typing.Optional[builtins.int] = None
