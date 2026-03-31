@@ -21,8 +21,10 @@
 
 //! Parameter subsystem - read and write configuration parameters
 
+use futures::StreamExt;
 use pyo3::prelude::*;
 use pyo3_stub_gen_derive::*;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::error::to_pyerr;
@@ -64,8 +66,8 @@ impl PersistentParamState {
 
 #[gen_stub_pyclass]
 #[pyclass]
-struct ParamChangeStream {
-    rx: Arc<tokio::sync::Mutex<futures::channel::mpsc::UnboundedReceiver<(String, crazyflie_lib::Value)>>>,
+pub struct ParamChangeStream {
+    rx: Arc<tokio::sync::Mutex<Pin<Box<dyn futures::Stream<Item = (String, crazyflie_lib::Value)> + Send>>>>,
 }
 
 #[gen_stub_pymethods]
@@ -80,10 +82,10 @@ impl ParamChangeStream {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let mut rx = rx.lock().await;
             match rx.next().await {
-                Some((parameter_name, parameter_value)) => Python::with_gil(|py| {
-                    let py_parameter_name = parameter_name.into_pyobject(py)?;
+                Some((parameter_name, parameter_value)) => Python::attach(|py| {
+                    let py_parameter_name: Bound<'_, pyo3::types::PyString> = parameter_name.into_pyobject(py)?;
                     let py_parameter_value = value_to_python(py, parameter_value)?;
-                    (py_parameter_name, py_parameter_value).into_pyobject(py).map(|b| b.into_any().unbind())
+                    (py_parameter_name, py_parameter_value).into_pyobject(py).map(|b: Bound<'_, pyo3::types::PyTuple>| b.into_any().unbind())
                 }),
                 None => Err(pyo3::exceptions::PyStopAsyncIteration::new_err(())),
             }
@@ -279,9 +281,23 @@ impl Param {
         })
     }
 
-    fn watch_change<'py>(&self, py: Python<'py>) -> ParamChangeStream {
+    /// Watch for parameter value changes
+    ///
+    /// Returns an async iterator that yields `(name, value)` tuples whenever
+    /// any parameter value changes. Each call creates an independent stream.
+    ///
+    /// # Returns
+    /// An async iterator yielding `(str, int | float)` tuples
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, ParamChangeStream]"))]
+    fn watch_change<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
-        ParamChangeStream { rx: Arc::new(tokio::sync::Mutex::new(cf.param.watch_change().await)) }
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let stream = cf.param.watch_change().await;
+            let rx = Arc::new(tokio::sync::Mutex::new(Box::pin(stream) as Pin<Box<dyn futures::Stream<Item = (String, crazyflie_lib::Value)> + Send>>));
+            Python::attach(|py| {
+                Ok(Py::new(py, ParamChangeStream { rx })?.into_any())
+            })
+        })
     }
 
     /// Get the persistent storage state of a parameter

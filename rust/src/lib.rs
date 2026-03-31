@@ -55,6 +55,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<LogStream>()?;
     m.add_class::<Param>()?;
     m.add_class::<PersistentParamState>()?;
+    m.add_class::<ParamChangeStream>()?;
     m.add_class::<Platform>()?;
     m.add_class::<AppChannel>()?;
     m.add_class::<Localization>()?;
