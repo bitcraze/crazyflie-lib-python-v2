@@ -73,10 +73,13 @@ pub struct ParamChangeStream {
 #[gen_stub_pymethods]
 #[pymethods]
 impl ParamChangeStream {
+    /// Return self (async iterator protocol)
     fn __aiter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
         slf
     }
 
+    /// Return the next `(name, value)` tuple, or raise StopAsyncIteration
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, tuple[str, int | float]]"))]
     fn __anext__<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let rx = self.rx.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
