@@ -779,10 +779,7 @@ class LedRingColor:
         Intensity percentage (0-100); values above 100 are clamped to 100
         """
     @intensity.setter
-    def intensity(self, value: builtins.int) -> None:
-        r"""
-        Intensity percentage (0-100); values above 100 are clamped to 100
-        """
+    def intensity(self, value: builtins.int) -> None: ...
     def __new__(
         cls,
         r: builtins.int = 0,
@@ -797,7 +794,7 @@ class LedRingColor:
         * `r` - Red component (0-255, default 0)
         * `g` - Green component (0-255, default 0)
         * `b` - Blue component (0-255, default 0)
-        * `intensity` - Intensity percentage (0-100, default 100); clamped to 100 if higher
+        * `intensity` - Intensity percentage (0-100, default 100); values above 100 are clamped to 100
         """
     def set(
         self,
@@ -1352,6 +1349,16 @@ class Param:
         # Returns
         The default value (int or float depending on parameter type)
         """
+    async def watch_change(self) -> ParamChangeStream:
+        r"""
+        Watch for parameter value changes
+
+        Returns an async iterator that yields `(name, value)` tuples whenever
+        any parameter value changes. Each call creates an independent stream.
+
+        # Returns
+        An async iterator yielding `(str, int | float)` tuples
+        """
     async def persistent_get_state(self, name: builtins.str) -> PersistentParamState:
         r"""
         Get the persistent storage state of a parameter
@@ -1387,6 +1394,17 @@ class Param:
 
         # Arguments
         * `name` - Parameter name in format "group.name"
+        """
+
+@typing.final
+class ParamChangeStream:
+    def __aiter__(self) -> ParamChangeStream:
+        r"""
+        Return self (async iterator protocol)
+        """
+    async def __anext__(self) -> tuple[str, int | float]:
+        r"""
+        Return the next `(name, value)` tuple, or raise StopAsyncIteration
         """
 
 class ParamError(CrazyflieError):
