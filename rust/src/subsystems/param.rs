@@ -84,6 +84,35 @@ pub struct Param {
     pub(crate) cf: Arc<crazyflie_lib::Crazyflie>,
 }
 
+#[gen_stub_pyclass]
+#[pyclass]
+struct ParamChangeStream {
+    rx: Arc<tokio::sync::Mutex<futures::channel::mpsc::UnboundedReceiver<(String, crazyflie_lib::Value)>>>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl ParamChangeStream {
+    fn __aiter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __anext__<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let rx = self.rx.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let mut rx = rx.lock().await;
+            match rx.next().await {
+                Some((parameter_name, parameter_value)) => Python::with_gil(|py| {
+                    let py_parameter_name = parameter_name.into_pyobject(py)?;
+                    let py_parameter_value = value_to_python(py, parameter_value)?;
+                    (py_parameter_name, py_parameter_value).into_pyobject(py).map(|b| b.into_any().unbind())
+                }),
+                None => Err(pyo3::exceptions::PyStopAsyncIteration::new_err(())),
+            }
+        })
+    }
+}
+
 #[gen_stub_pymethods]
 #[pymethods]
 impl Param {
@@ -248,6 +277,11 @@ impl Param {
             let value = cf.param.get_default_value(&name).await.map_err(to_pyerr)?;
             Python::attach(|py| value_to_python(py, value))
         })
+    }
+
+    fn watch_change<'py>(&self, py: Python<'py>) -> ParamChangeStream {
+        let cf = self.cf.clone();
+        ParamChangeStream { rx: cf.param.watch_change() }
     }
 
     /// Get the persistent storage state of a parameter
