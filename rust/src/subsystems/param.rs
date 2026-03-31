@@ -62,28 +62,6 @@ impl PersistentParamState {
     }
 }
 
-/// Access to the Crazyflie Param Subsystem
-///
-/// This struct provides methods to interact with the parameter subsystem.
-///
-/// The Crazyflie exposes a param subsystem that allows to easily declare parameter
-/// variables in the Crazyflie and to discover, read and write them from the ground.
-///
-/// Variables are defined in a table of content that is downloaded upon connection.
-/// Each param variable have a unique name composed from a group and a variable name.
-/// Functions that accesses variables, take a `name` parameter that accepts a string
-/// in the format "group.variable"
-///
-/// During connection, the full param table of content is downloaded form the
-/// Crazyflie as well as the values of all the variable. If a variable value
-/// is modified by the Crazyflie during runtime, it sends a packet with the new
-/// value which updates the local value cache.
-#[gen_stub_pyclass]
-#[pyclass]
-pub struct Param {
-    pub(crate) cf: Arc<crazyflie_lib::Crazyflie>,
-}
-
 #[gen_stub_pyclass]
 #[pyclass]
 struct ParamChangeStream {
@@ -111,6 +89,28 @@ impl ParamChangeStream {
             }
         })
     }
+}
+
+/// Access to the Crazyflie Param Subsystem
+///
+/// This struct provides methods to interact with the parameter subsystem.
+///
+/// The Crazyflie exposes a param subsystem that allows to easily declare parameter
+/// variables in the Crazyflie and to discover, read and write them from the ground.
+///
+/// Variables are defined in a table of content that is downloaded upon connection.
+/// Each param variable have a unique name composed from a group and a variable name.
+/// Functions that accesses variables, take a `name` parameter that accepts a string
+/// in the format "group.variable"
+///
+/// During connection, the full param table of content is downloaded form the
+/// Crazyflie as well as the values of all the variable. If a variable value
+/// is modified by the Crazyflie during runtime, it sends a packet with the new
+/// value which updates the local value cache.
+#[gen_stub_pyclass]
+#[pyclass]
+pub struct Param {
+    pub(crate) cf: Arc<crazyflie_lib::Crazyflie>,
 }
 
 #[gen_stub_pymethods]
@@ -281,7 +281,7 @@ impl Param {
 
     fn watch_change<'py>(&self, py: Python<'py>) -> ParamChangeStream {
         let cf = self.cf.clone();
-        ParamChangeStream { rx: cf.param.watch_change() }
+        ParamChangeStream { rx: Arc::new(tokio::sync::Mutex::new(cf.param.watch_change().await)) }
     }
 
     /// Get the persistent storage state of a parameter

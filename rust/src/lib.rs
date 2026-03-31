@@ -35,7 +35,7 @@ pub mod value;
 use crazyflie::Crazyflie;
 use link_context::LinkContext;
 use subsystems::{
-    Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, Platform, AppChannel,
+    Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, ParamChangeStream, Platform, AppChannel,
     Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning,
     LighthouseAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
