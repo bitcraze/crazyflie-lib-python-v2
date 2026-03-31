@@ -47,6 +47,8 @@ See the [examples/](examples/) directory for more.
    ```
    This installs the `dev` dependency group which provides `maturin`, `pre-commit`, `pytest`, and other development tools. Commands prefixed with `uv run` below require this group.
 
+   It also triggers maturin to build Rust libraries used by Python.
+
 2. **Install pre-commit hooks:**
    ```bash
    uv run pre-commit install
