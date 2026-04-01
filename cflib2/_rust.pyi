@@ -1398,6 +1398,9 @@ class Param:
 
 @typing.final
 class ParamChangeStream:
+    r"""
+    Async iterator that yields `(name, value)` tuples when parameters change
+    """
     def __aiter__(self) -> ParamChangeStream:
         r"""
         Return self (async iterator protocol)
