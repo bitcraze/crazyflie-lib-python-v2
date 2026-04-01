@@ -82,10 +82,8 @@ async def get_and_set_values(cf: Crazyflie, param_name: str) -> None:
                 f"\n⚠ Warning: Final value ({final_value}) differs from original ({original_value})"
             )
 
-    finally:
-        print("\nDisconnecting...")
-        await cf.disconnect()
-        print("Done!")
+    except Exception as e:
+        print(f"\nError: {e}")
 
 
 async def watch_param_changes(cf: Crazyflie) -> None:
@@ -106,10 +104,13 @@ async def main() -> None:
 
     param_name = "pm.lowVoltage"
 
-    await asyncio.gather(
-        get_and_set_values(cf, param_name),
-        watch_param_changes(cf),
-    )
+    watcher_task = asyncio.create_task(watch_param_changes(cf))
+    await get_and_set_values(cf, param_name)
+    watcher_task.cancel()
+
+    print("Disconnect...")
+    cf.disconnect()
+    print("Done!")
 
 
 if __name__ == "__main__":
