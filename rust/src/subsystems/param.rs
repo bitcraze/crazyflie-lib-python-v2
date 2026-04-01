@@ -296,7 +296,7 @@ impl Param {
     fn watch_change<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let stream = cf.param.watch_change().await;
+            let stream = cf.param.watch_change().await.map_err(to_pyerr)?;
             let rx = Arc::new(tokio::sync::Mutex::new(Box::pin(stream) as Pin<Box<dyn futures::Stream<Item = (String, crazyflie_lib::Value)> + Send>>));
             Python::attach(|py| {
                 Ok(Py::new(py, ParamChangeStream { rx })?.into_any())

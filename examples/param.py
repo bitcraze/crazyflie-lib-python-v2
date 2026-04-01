@@ -91,7 +91,9 @@ async def watch_param_changes(cf: Crazyflie) -> None:
     param_change_stream = await param.watch_change()
 
     async for name, value in param_change_stream:
+        print("--------------------")
         print(f"Watched change: {name}: {value}")
+        print("--------------------")
 
 
 async def main() -> None:
@@ -104,9 +106,9 @@ async def main() -> None:
 
     param_name = "pm.lowVoltage"
 
+    # Let watch changes run in the background
     watcher_task = asyncio.create_task(watch_param_changes(cf))
     await get_and_set_values(cf, param_name)
-    watcher_task.cancel()
 
     print("Disconnect...")
     cf.disconnect()
