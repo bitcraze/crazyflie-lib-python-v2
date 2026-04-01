@@ -64,6 +64,7 @@ impl PersistentParamState {
     }
 }
 
+/// Async iterator that yields `(name, value)` tuples when parameters change
 #[gen_stub_pyclass]
 #[pyclass]
 pub struct ParamChangeStream {
