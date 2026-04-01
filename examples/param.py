@@ -45,16 +45,8 @@ class Args:
     """Crazyflie URI"""
 
 
-async def main() -> None:
-    args = tyro.cli(Args)
-
-    print(f"Connecting to {args.uri}...")
-    context = LinkContext()
-    cf = await Crazyflie.connect_from_uri(context, args.uri)
-    print("Connected!")
-
+async def get_and_set_values(cf: Crazyflie, param_name: str) -> None:
     param = cf.param()
-    param_name = "pm.lowVoltage"
 
     try:
         # Get original value
@@ -94,6 +86,30 @@ async def main() -> None:
         print("\nDisconnecting...")
         await cf.disconnect()
         print("Done!")
+
+
+async def watch_param_changes(cf: Crazyflie) -> None:
+    param = cf.param()
+    param_change_stream = await param.watch_change()
+
+    async for name, value in param_change_stream:
+        print(f"Watched change: {name}: {value}")
+
+
+async def main() -> None:
+    args = tyro.cli(Args)
+
+    print(f"Connecting to {args.uri}...")
+    context = LinkContext()
+    cf = await Crazyflie.connect_from_uri(context, args.uri)
+    print("Connected!")
+
+    param_name = "pm.lowVoltage"
+
+    await asyncio.gather(
+        get_and_set_values(cf, param_name),
+        watch_param_changes(cf),
+    )
 
 
 if __name__ == "__main__":
