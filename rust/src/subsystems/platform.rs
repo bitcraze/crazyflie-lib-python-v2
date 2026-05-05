@@ -23,6 +23,7 @@
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::PyTypeInfo;
 use pyo3_stub_gen_derive::*;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -107,10 +108,14 @@ impl Platform {
     /// Arms or disarms the Crazyflie's safety systems. When disarmed, the motors
     /// will not spin even if thrust commands are sent.
     ///
+    /// Deprecated: use `crazyflie.supervisor().send_arming_request()` instead.
+    ///
     /// # Arguments
     /// * `do_arm` - true to arm, false to disarm
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
     fn send_arming_request<'py>(&self, py: Python<'py>, do_arm: bool) -> PyResult<Bound<'py, PyAny>> {
+        // Issue deprecation warning (using UserWarning for visibility)
+        PyErr::warn(py, &pyo3::exceptions::PyUserWarning::type_object(py), c"platform.send_arming_request() is deprecated. Use supervisor.send_arming_request() instead.", 2)?;
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             cf.supervisor.send_arming_request(do_arm).await.map_err(to_pyerr)?;
@@ -121,8 +126,12 @@ impl Platform {
     /// Send crash recovery request
     ///
     /// Requests recovery from a crash state detected by the Crazyflie.
+    ///
+    /// Deprecated: use `crazyflie.supervisor().send_crash_recovery_request()` instead.
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
     fn send_crash_recovery_request<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        // Issue deprecation warning (using UserWarning for visibility)
+        PyErr::warn(py, &pyo3::exceptions::PyUserWarning::type_object(py), c"platform.send_crash_recovery_request() is deprecated. Use supervisor.send_crash_recovery_request() instead.", 2)?;
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             cf.supervisor.send_crash_recovery_request().await.map_err(to_pyerr)?;

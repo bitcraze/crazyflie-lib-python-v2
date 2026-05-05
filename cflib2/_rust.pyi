@@ -411,6 +411,10 @@ class Crazyflie:
         r"""
         Get the platform subsystem
         """
+    def supervisor(self) -> Supervisor:
+        r"""
+        Get the supervisor subsystem
+        """
     def __str__(self) -> builtins.str: ...
     def __repr__(self) -> builtins.str: ...
 
@@ -441,6 +445,8 @@ class EmergencyControl:
 
         Immediately stops all motors and puts the Crazyflie into a locked state.
         The drone will require a reboot before it can fly again.
+
+        Deprecated: Use `crazyflie.supervisor().send_emergency_stop()` instead.
         """
     async def send_emergency_stop_watchdog(self) -> None:
         r"""
@@ -450,6 +456,8 @@ class EmergencyControl:
         the drone if this message isn't sent every 1000ms. Once activated by the first
         call, you must continue sending this periodically forever or the drone will
         automatically emergency stop. Use only if you need automatic failsafe behavior.
+
+        Deprecated: Use `crazyflie.supervisor().send_emergency_stop_watchdog()` instead.
         """
 
 @typing.final
@@ -1487,6 +1495,8 @@ class Platform:
         Arms or disarms the Crazyflie's safety systems. When disarmed, the motors
         will not spin even if thrust commands are sent.
 
+        Deprecated: Use `crazyflie.supervisor().send_arming_request()` instead.
+
         # Arguments
         * `do_arm` - true to arm, false to disarm
         """
@@ -1495,6 +1505,8 @@ class Platform:
         Send crash recovery request
 
         Requests recovery from a crash state detected by the Crazyflie.
+
+        Deprecated: Use `crazyflie.supervisor().send_crash_recovery_request()` instead.
         """
     async def get_app_channel(self) -> typing.Optional[AppChannel]:
         r"""
@@ -1577,6 +1589,104 @@ class ProtocolVersionNotSupportedError(CrazyflieError):
     """
 
     ...
+
+@typing.final
+class Supervisor:
+    r"""
+    Supervisor subsystem
+
+    Monitors the Crazyflie's system state and exposes arming, crash recovery,
+    and emergency stop controls. Obtain via `crazyflie.supervisor()`.
+    """
+    async def read_bitfield(self) -> builtins.int:
+        r"""
+        Read the raw supervisor state bitfield
+
+        Returns the raw bitfield as an integer. Uses time-based caching
+        (100 ms) to avoid flooding the link.
+        """
+    async def active_states(self) -> builtins.list[builtins.str]:
+        r"""
+        Names of all currently active states
+        """
+    async def send_arming_request(self, do_arm: builtins.bool) -> None:
+        r"""
+        Send system arm/disarm request
+
+        Arms or disarms the Crazyflie's motors. When disarmed, the motors
+        will not spin even if thrust commands are sent.
+
+        Args:
+            do_arm: True to arm, False to disarm
+        """
+    async def send_crash_recovery_request(self) -> None:
+        r"""
+        Send crash recovery request
+
+        Requests recovery from a crashed state. The firmware may allow
+        recovery without a full reboot depending on the crash type.
+        """
+    async def send_emergency_stop(self) -> None:
+        r"""
+        Send emergency stop
+
+        Immediately stops all motors and puts the Crazyflie into a locked state.
+        The drone will require a reboot before it can fly again.
+        """
+    async def send_emergency_stop_watchdog(self) -> None:
+        r"""
+        Send emergency stop watchdog
+
+        Activates/resets a watchdog failsafe that will automatically emergency
+        stop the drone if this message is not sent every 1000 ms. Once
+        activated, you must keep sending this periodically or the drone will
+        stop. Use only when you need automatic failsafe behaviour on
+        communication loss.
+        """
+    async def can_be_armed(self) -> builtins.bool:
+        r"""
+        System can be armed - will accept an arming command
+        """
+    async def is_armed(self) -> builtins.bool:
+        r"""
+        System is armed
+        """
+    async def is_auto_armed(self) -> builtins.bool:
+        r"""
+        System is configured to automatically arm
+        """
+    async def can_fly(self) -> builtins.bool:
+        r"""
+        The Crazyflie is ready to fly
+        """
+    async def is_flying(self) -> builtins.bool:
+        r"""
+        The Crazyflie is flying
+        """
+    async def is_tumbled(self) -> builtins.bool:
+        r"""
+        The Crazyflie is tumbled (upside down)
+        """
+    async def is_locked(self) -> builtins.bool:
+        r"""
+        The Crazyflie is in the locked state and must be restarted
+        """
+    async def is_crashed(self) -> builtins.bool:
+        r"""
+        The Crazyflie has crashed
+        """
+    async def hl_control_active(self) -> builtins.bool:
+        r"""
+        High level commander is actively flying the drone
+        """
+    async def hl_traj_finished(self) -> builtins.bool:
+        r"""
+        High level commander trajectory has finished
+        """
+    async def hl_control_disabled(self) -> builtins.bool:
+        r"""
+        High level commander is disabled and not producing setpoints
+        """
 
 class SystemError(CrazyflieError):
     r"""
