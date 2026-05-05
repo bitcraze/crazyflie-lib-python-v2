@@ -54,7 +54,7 @@ async def main() -> None:
     cf = await Crazyflie.connect_from_uri(context, args.uri)
     print("Connected!")
 
-    platform = cf.platform()
+    supervisor = cf.supervisor()
 
     try:
         print("\n⚠️  WARNING: This will ARM the Crazyflie!")
@@ -64,7 +64,7 @@ async def main() -> None:
 
         # Arm the Crazyflie
         print("\n1. Arming the Crazyflie...")
-        await platform.send_arming_request(do_arm=True)
+        await supervisor.send_arming_request(do_arm=True)
         print("   ✓ Armed! Motors can now spin.")
 
         # Wait a few seconds
@@ -76,14 +76,14 @@ async def main() -> None:
 
         # Disarm the Crazyflie
         print("\n3. Disarming the Crazyflie...")
-        await platform.send_arming_request(do_arm=False)
+        await supervisor.send_arming_request(do_arm=False)
         print("   ✓ Disarmed! Motors are now disabled.")
 
         print("\n✓ Arming cycle complete!")
 
     except KeyboardInterrupt:
         print("\n\n⚠️  Interrupted! Disarming for safety...")
-        await platform.send_arming_request(do_arm=False)
+        await supervisor.send_arming_request(do_arm=False)
         print("   ✓ Disarmed!")
 
     finally:
