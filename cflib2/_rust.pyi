@@ -48,6 +48,23 @@ class AppchannelPacketTooLargeError(CrazyflieError):
     ...
 
 @typing.final
+class BootMode:
+    r"""
+    How to enter bootloader mode
+    """
+    @staticmethod
+    def warm(uri: builtins.str) -> BootMode:
+        r"""
+        Warm boot from running firmware
+        """
+    @staticmethod
+    def cold() -> BootMode:
+        r"""
+        Cold boot / rescue mode (hold power button 3s)
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
 class Commander:
     r"""
     Commander subsystem wrapper
@@ -507,6 +524,127 @@ class FileTocCache:
         """
 
 @typing.final
+class FirmwareArchiveInfo:
+    r"""
+    Metadata from a firmware archive manifest
+    """
+    @property
+    def platform(self) -> builtins.str:
+        r"""
+        Platform identifier (e.g. "cf2", "bolt")
+        """
+    @property
+    def release(self) -> builtins.str:
+        r"""
+        Release version string
+        """
+    @property
+    def manifest_version(self) -> builtins.int:
+        r"""
+        Manifest version (major)
+        """
+    @property
+    def manifest_subversion(self) -> builtins.int:
+        r"""
+        Manifest subversion (minor)
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
+class FirmwareImage:
+    r"""
+    A single firmware image ready to be flashed
+    """
+    @property
+    def data(self) -> builtins.list[builtins.int]:
+        r"""
+        Raw binary data
+        """
+    @property
+    def target(self) -> FlashTarget:
+        r"""
+        Target this image is for
+        """
+    @property
+    def file_name(self) -> builtins.str:
+        r"""
+        Original file name
+        """
+    @property
+    def fw_type(self) -> builtins.str:
+        r"""
+        Firmware type (e.g. "fw", "bootloader+softdevice")
+        """
+    @property
+    def version(self) -> builtins.str:
+        r"""
+        Release version string
+        """
+    @property
+    def requires(self) -> builtins.list[builtins.str]:
+        r"""
+        Softdevice requirements
+        """
+    @property
+    def provides(self) -> builtins.list[builtins.str]:
+        r"""
+        Softdevice provisions
+        """
+    def target_key(self) -> builtins.str:
+        r"""
+        Composite target key (e.g. "stm32-fw", "bcAI:esp-fw")
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
+class FlashStartOverride:
+    r"""
+    Override for the flash start address of a firmware image
+    """
+    @staticmethod
+    def address(addr: builtins.int) -> FlashStartOverride:
+        r"""
+        Create an address override (e.g. 0x08004000)
+        """
+    @staticmethod
+    def page(page: builtins.int) -> FlashStartOverride:
+        r"""
+        Create a page number override
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
+class FlashTarget:
+    r"""
+    Which target a firmware image is for
+    """
+    @property
+    def target_name(self) -> builtins.str:
+        r"""
+        Get the target name (e.g. "stm32", "nrf51", "bcAI:esp")
+        """
+    @staticmethod
+    def stm32(
+        start_override: typing.Optional[FlashStartOverride] = None,
+    ) -> FlashTarget:
+        r"""
+        Create a STM32 target
+        """
+    @staticmethod
+    def nrf51(
+        start_override: typing.Optional[FlashStartOverride] = None,
+    ) -> FlashTarget:
+        r"""
+        Create an nRF51 target
+        """
+    @staticmethod
+    def deck(name: builtins.str) -> FlashTarget:
+        r"""
+        Create a deck target
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
 class HighLevelCommander:
     r"""
     High-level commander subsystem wrapper
@@ -779,10 +917,7 @@ class LedRingColor:
         Intensity percentage (0-100); values above 100 are clamped to 100
         """
     @intensity.setter
-    def intensity(self, value: builtins.int) -> None:
-        r"""
-        Intensity percentage (0-100); values above 100 are clamped to 100
-        """
+    def intensity(self, value: builtins.int) -> None: ...
     def __new__(
         cls,
         r: builtins.int = 0,
@@ -797,7 +932,7 @@ class LedRingColor:
         * `r` - Red component (0-255, default 0)
         * `g` - Green component (0-255, default 0)
         * `b` - Blue component (0-255, default 0)
-        * `intensity` - Intensity percentage (0-100, default 100); clamped to 100 if higher
+        * `intensity` - Intensity percentage (0-100, default 100); values above 100 are clamped to 100
         """
     def set(
         self,
@@ -1580,3 +1715,62 @@ class VariableNotFoundError(CrazyflieError):
     """
 
     ...
+
+def filter_images(
+    images: typing.Sequence[FirmwareImage], selected_keys: typing.Sequence[builtins.str]
+) -> builtins.list[FirmwareImage]:
+    r"""
+    Filter firmware images to only include those with matching target keys
+
+    Args:
+        images: List of firmware images
+        selected_keys: Target keys to keep (e.g. ["stm32-fw", "nrf51-fw"])
+    """
+
+def firmware_from_binary(
+    data: typing.Sequence[builtins.int], target: FlashTarget, file_name: builtins.str
+) -> FirmwareImage:
+    r"""
+    Create a firmware image from a raw binary
+
+    Args:
+        data: Raw binary data
+        target: Which target to flash
+        file_name: Source file name (for display)
+    """
+
+async def flash(
+    link_context: LinkContext,
+    boot_mode: BootMode,
+    uri: typing.Optional[builtins.str],
+    images: typing.Sequence[FirmwareImage],
+    progress: typing.Optional[
+        typing.Callable[[builtins.dict[builtins.str, typing.Any]], None]
+    ],
+) -> None:
+    r"""
+    Flash firmware images to a Crazyflie
+
+    Handles the full flash sequence: boot entry, STM32/nRF51 flashing,
+    softdevice management, and deck firmware updates.
+
+    Args:
+        link_context: LinkContext for radio communication
+        boot_mode: How to enter bootloader mode (BootMode.warm(uri) or BootMode.cold())
+        uri: Crazyflie URI (needed for deck phase reconnection)
+        images: List of firmware images to flash
+        progress: Optional callback receiving progress dicts
+    """
+
+def parse_firmware_zip(
+    data: typing.Sequence[builtins.int],
+) -> tuple[FirmwareArchiveInfo, builtins.list[FirmwareImage]]:
+    r"""
+    Parse a firmware zip archive into metadata and a list of firmware images
+
+    Args:
+        data: Raw bytes of the zip file
+
+    Returns:
+        Tuple of (archive info, list of firmware images)
+    """

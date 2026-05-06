@@ -25,6 +25,7 @@
 
 use pyo3::prelude::*;
 
+mod bootloader;
 mod crazyflie;
 mod error;
 mod link_context;
@@ -73,6 +74,15 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<NoTocCache>()?;
     m.add_class::<InMemoryTocCache>()?;
     m.add_class::<FileTocCache>()?;
+    m.add_class::<bootloader::FlashStartOverride>()?;
+    m.add_class::<bootloader::FlashTarget>()?;
+    m.add_class::<bootloader::FirmwareImage>()?;
+    m.add_class::<bootloader::FirmwareArchiveInfo>()?;
+    m.add_class::<bootloader::BootMode>()?;
+    m.add_function(pyo3::wrap_pyfunction!(bootloader::parse_firmware_zip, m)?)?;
+    m.add_function(pyo3::wrap_pyfunction!(bootloader::firmware_from_binary, m)?)?;
+    m.add_function(pyo3::wrap_pyfunction!(bootloader::filter_images, m)?)?;
+    m.add_function(pyo3::wrap_pyfunction!(bootloader::flash, m)?)?;
     error::register_exceptions(m)?;
     Ok(())
 }
