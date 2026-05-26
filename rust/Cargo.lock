@@ -169,7 +169,7 @@ dependencies = [
 [[package]]
 name = "cfloader"
 version = "0.2.0"
-source = "git+https://github.com/bitcraze/cfloader-rs.git?rev=f9d3cab#f9d3cab755f72b7dc9c849c16cd3ba4942011a22"
+source = "git+https://github.com/bitcraze/cfloader-rs.git?rev=551e3135#551e31356a6451e6e77ef8c9b03669462e350f74"
 dependencies = [
  "anyhow",
  "crazyflie-lib",
@@ -276,8 +276,9 @@ dependencies = [
 
 [[package]]
 name = "crazyflie-lib"
-version = "0.7.1"
-source = "git+https://github.com/bitcraze/crazyflie-lib-rs.git?rev=0d5eb0c6#0d5eb0c688f6426e8ecf5b748c4cbd4145ecdbae"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63e1924ed55c8ef67ed9bf2561f2cc7aca148802f9c1ddf6a469bbaadba592ec"
 dependencies = [
  "async-broadcast",
  "async-stream",
@@ -298,9 +299,9 @@ dependencies = [
 
 [[package]]
 name = "crazyflie-link"
-version = "0.4.3"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c546b30f976817451936078445d21d5efecbe2033fc3ea25e8fac99d37e733d9"
+checksum = "899dd3e14b47a1be3ee0c78c34c5b4b6634899ea2f5aab4d033829dd3d3ff3f0"
 dependencies = [
  "async-trait",
  "bitflags",
@@ -320,9 +321,9 @@ dependencies = [
 
 [[package]]
 name = "crazyradio"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb0ef9ca124036f6ae818da8529ce53da1bae563b88fc3ca847c78c6258bb989"
+checksum = "bf6b691de0b51316a0a78f351fd1b727e1242513b6a5eaab2284b153e4690a43"
 dependencies = [
  "flume",
  "rusb",
