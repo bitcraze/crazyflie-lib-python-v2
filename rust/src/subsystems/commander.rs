@@ -67,6 +67,47 @@ impl Commander {
         })
     }
 
+    /// Sends a full-state setpoint in world coordinates.
+    ///
+    /// # Arguments
+    /// * `pos` - Target position [x, y, z] in meters
+    /// * `vel` - Target velocity [vx, vy, vz] in meters/second
+    /// * `acc` - Target acceleration [ax, ay, az] in meters/second^2
+    /// * `orientation` - Target orientation quaternion [qx, qy, qz, qw]
+    /// * `rollrate` - Target roll rate in radians/second
+    /// * `pitchrate` - Target pitch rate in radians/second
+    /// * `yawrate` - Target yaw rate in radians/second
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
+    fn send_setpoint_full_state<'py>(
+        &self,
+        py: Python<'py>,
+        pos: Vec<f32>,
+        vel: Vec<f32>,
+        acc: Vec<f32>,
+        orientation: Vec<f32>,
+        rollrate: f32,
+        pitchrate: f32,
+        yawrate: f32,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let pos = vector3(pos, "Position")?;
+        let vel = vector3(vel, "Velocity")?;
+        let acc = vector3(acc, "Acceleration")?;
+        let orientation: [f32; 4] = orientation.try_into().map_err(|_| {
+            pyo3::exceptions::PyValueError::new_err(
+                "Orientation must be a sequence of 4 floats [qx, qy, qz, qw]"
+            )
+        })?;
+        let cf = self.cf.clone();
+
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            cf.commander
+                .setpoint_full_state(pos, vel, acc, orientation, rollrate, pitchrate, yawrate)
+                .await
+                .map_err(to_pyerr)?;
+            Ok(())
+        })
+    }
+
     /// Sends an absolute position setpoint in world coordinates, with yaw as an absolute orientation.
     ///
     /// # Arguments
@@ -183,5 +224,25 @@ impl Commander {
                 .map_err(to_pyerr)?;
             Ok(())
         })
+    }
+}
+
+fn vector3(vector: Vec<f32>, name: &str) -> PyResult<[f32; 3]> {
+    vector.try_into().map_err(|_| {
+        pyo3::exceptions::PyValueError::new_err(format!(
+            "{} must be a sequence of 3 floats [x, y, z]",
+            name
+        ))
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vector3_validates_length() {
+        assert_eq!(vector3(vec![1.0, 2.0, 3.0], "Position").unwrap(), [1.0, 2.0, 3.0]);
+        assert!(vector3(vec![1.0, 2.0], "Position").is_err());
     }
 }

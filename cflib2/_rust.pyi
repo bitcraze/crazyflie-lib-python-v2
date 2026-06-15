@@ -70,6 +70,28 @@ class Commander:
 
         Note: Thrust is locked by default for safety. To unlock, send a setpoint with `thrust = 0` once before sending nonzero thrust values.
         """
+    async def send_setpoint_full_state(
+        self,
+        pos: typing.Sequence[builtins.float],
+        vel: typing.Sequence[builtins.float],
+        acc: typing.Sequence[builtins.float],
+        orientation: typing.Sequence[builtins.float],
+        rollrate: builtins.float,
+        pitchrate: builtins.float,
+        yawrate: builtins.float,
+    ) -> None:
+        r"""
+        Sends a full-state setpoint in world coordinates.
+
+        # Arguments
+        * `pos` - Target position [x, y, z] in meters
+        * `vel` - Target velocity [vx, vy, vz] in meters/second
+        * `acc` - Target acceleration [ax, ay, az] in meters/second^2
+        * `orientation` - Target orientation quaternion [qx, qy, qz, qw]
+        * `rollrate` - Target roll rate in radians/second
+        * `pitchrate` - Target pitch rate in radians/second
+        * `yawrate` - Target yaw rate in radians/second
+        """
     async def send_setpoint_position(
         self,
         x: builtins.float,
