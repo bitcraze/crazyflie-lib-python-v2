@@ -70,13 +70,11 @@ impl Commander {
     /// Sends a full-state setpoint in world coordinates.
     ///
     /// # Arguments
-    /// * `pos` - Target position [x, y, z] in meters
-    /// * `vel` - Target velocity [vx, vy, vz] in meters/second
-    /// * `acc` - Target acceleration [ax, ay, az] in meters/second^2
-    /// * `orientation` - Target orientation quaternion [qx, qy, qz, qw]
-    /// * `rollrate` - Target roll rate in radians/second
-    /// * `pitchrate` - Target pitch rate in radians/second
-    /// * `yawrate` - Target yaw rate in radians/second
+    /// * `pos` - Target position [x, y, z] (meters, world frame)
+    /// * `vel` - Target velocity [vx, vy, vz] (meters/second, world frame)
+    /// * `acc` - Target acceleration [ax, ay, az] (meters/second^2, world frame)
+    /// * `orientation` - Target orientation quaternion [qx, qy, qz, qw] (unitless, world frame)
+    /// * `ang_vel` - Target angular velocity [ωx, ωy, ωz] (radians/second, body frame)
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
     fn send_setpoint_full_state<'py>(
         &self,
@@ -85,13 +83,12 @@ impl Commander {
         vel: Vec<f32>,
         acc: Vec<f32>,
         orientation: Vec<f32>,
-        rollrate: f32,
-        pitchrate: f32,
-        yawrate: f32,
+        ang_vel: Vec<f32>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let pos = vector3(pos, "Position")?;
         let vel = vector3(vel, "Velocity")?;
         let acc = vector3(acc, "Acceleration")?;
+        let ang_vel = vector3(ang_vel, "Angular Velocity")?;
         let orientation: [f32; 4] = orientation.try_into().map_err(|_| {
             pyo3::exceptions::PyValueError::new_err(
                 "Orientation must be a sequence of 4 floats [qx, qy, qz, qw]"
@@ -101,7 +98,7 @@ impl Commander {
 
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             cf.commander
-                .setpoint_full_state(pos, vel, acc, orientation, rollrate, pitchrate, yawrate)
+                .setpoint_full_state(pos, vel, acc, orientation, ang_vel)
                 .await
                 .map_err(to_pyerr)?;
             Ok(())

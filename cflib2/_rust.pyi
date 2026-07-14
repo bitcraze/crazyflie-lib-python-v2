@@ -76,21 +76,17 @@ class Commander:
         vel: typing.Sequence[builtins.float],
         acc: typing.Sequence[builtins.float],
         orientation: typing.Sequence[builtins.float],
-        rollrate: builtins.float,
-        pitchrate: builtins.float,
-        yawrate: builtins.float,
+        ang_vel: typing.Sequence[builtins.float],
     ) -> None:
         r"""
         Sends a full-state setpoint in world coordinates.
 
         # Arguments
-        * `pos` - Target position [x, y, z] in meters
-        * `vel` - Target velocity [vx, vy, vz] in meters/second
-        * `acc` - Target acceleration [ax, ay, az] in meters/second^2
-        * `orientation` - Target orientation quaternion [qx, qy, qz, qw]
-        * `rollrate` - Target roll rate in radians/second
-        * `pitchrate` - Target pitch rate in radians/second
-        * `yawrate` - Target yaw rate in radians/second
+        * `pos` - Target position [x, y, z] (meters, world frame)
+        * `vel` - Target velocity [vx, vy, vz] (meters/second, world frame)
+        * `acc` - Target acceleration [ax, ay, az] (meters/second^2, world frame)
+        * `orientation` - Target orientation quaternion [qx, qy, qz, qw] (unitless, world frame)
+        * `ang_vel` - Target angular velocity [ωx, ωy, ωz] (radians/second, body frame)
         """
     async def send_setpoint_position(
         self,
