@@ -102,34 +102,6 @@ impl Platform {
         })
     }
 
-    /// Send system arm/disarm request
-    ///
-    /// Arms or disarms the Crazyflie's safety systems. When disarmed, the motors
-    /// will not spin even if thrust commands are sent.
-    ///
-    /// # Arguments
-    /// * `do_arm` - true to arm, false to disarm
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn send_arming_request<'py>(&self, py: Python<'py>, do_arm: bool) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.supervisor.send_arming_request(do_arm).await.map_err(to_pyerr)?;
-            Ok(())
-        })
-    }
-
-    /// Send crash recovery request
-    ///
-    /// Requests recovery from a crash state detected by the Crazyflie.
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn send_crash_recovery_request<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.supervisor.send_crash_recovery_request().await.map_err(to_pyerr)?;
-            Ok(())
-        })
-    }
-
     /// Get the bidirectional app channel for custom communication
     ///
     /// The app channel allows bidirectional communication between ground software

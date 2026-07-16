@@ -29,12 +29,14 @@ mod log;
 pub mod memory;
 mod param;
 mod platform;
+mod supervisor;
 
 pub use commander::Commander;
 pub use console::Console;
 pub use high_level_commander::HighLevelCommander;
-pub use localization::{Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning, LighthouseAngleData, LighthouseAngles};
+pub use localization::{Localization, ExternalPose, Lighthouse, LocoPositioning, LighthouseAngleData, LighthouseAngles};
 pub use log::{Log, LogBlock, LogData, LogStream};
 pub use memory::{Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor};
 pub use param::{Param, PersistentParamState};
 pub use platform::{Platform, AppChannel};
+pub use supervisor::{Supervisor, SupervisorState};
