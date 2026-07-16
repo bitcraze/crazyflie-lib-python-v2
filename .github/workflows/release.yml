@@ -120,12 +120,12 @@ jobs:
           fi
 
       - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
 
       - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        with:
-          command: upload
-          args: --non-interactive --skip-existing wheels-*/*
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
     runs-on: ubuntu-latest

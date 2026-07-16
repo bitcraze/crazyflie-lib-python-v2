@@ -99,8 +99,11 @@ jobs:
       id-token: write
     steps:
       - uses: actions/download-artifact@v4
-      - name: Publish to TestPyPI
-        uses: PyO3/maturin-action@v1
         with:
-          command: upload
-          args: --non-interactive --skip-existing --repository testpypi wheels-*/*
+          path: dist
+          merge-multiple: true
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
