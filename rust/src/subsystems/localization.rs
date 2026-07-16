@@ -86,7 +86,7 @@ impl EmergencyControl {
     fn send_emergency_stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.localization.emergency.send_emergency_stop().await
+            cf.supervisor.send_emergency_stop().await
                 .map_err(crate::error::to_pyerr)?;
             Ok(())
         })
@@ -102,7 +102,7 @@ impl EmergencyControl {
     fn send_emergency_stop_watchdog<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.localization.emergency.send_emergency_stop_watchdog().await
+            cf.supervisor.send_emergency_stop_watchdog().await
                 .map_err(crate::error::to_pyerr)?;
             Ok(())
         })
