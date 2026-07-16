@@ -39,7 +39,7 @@ use std::sync::Arc;
 #[gen_stub_pyclass]
 #[pyclass]
 pub struct LinkContext {
-    pub(crate) inner: Arc<crazyflie_link::LinkContext>,
+    pub(crate) inner: Arc<crazyflie_lib::crazyflie_link::LinkContext>,
 }
 
 #[gen_stub_pymethods]
@@ -48,7 +48,7 @@ impl LinkContext {
     #[new]
     fn new() -> PyResult<Self> {
         Ok(LinkContext {
-            inner: Arc::new(crazyflie_link::LinkContext::new()),
+            inner: Arc::new(crazyflie_lib::crazyflie_link::LinkContext::new()),
         })
     }
 
@@ -101,7 +101,7 @@ impl LinkContext {
         let mut addr_array = [0u8; 5];
         addr_array.copy_from_slice(&address);
 
-        let ch = crazyradio::Channel::from_number(channel)
+        let ch = crazyflie_lib::crazyflie_link::crazyradio::Channel::from_number(channel)
             .map_err(|_| PyValueError::new_err(format!("Invalid channel {}: must be 0-125", channel)))?;
 
         let inner = self.inner.clone();
