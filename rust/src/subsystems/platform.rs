@@ -113,7 +113,7 @@ impl Platform {
     fn send_arming_request<'py>(&self, py: Python<'py>, do_arm: bool) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.platform.send_arming_request(do_arm).await.map_err(to_pyerr)?;
+            cf.supervisor.send_arming_request(do_arm).await.map_err(to_pyerr)?;
             Ok(())
         })
     }
@@ -125,7 +125,7 @@ impl Platform {
     fn send_crash_recovery_request<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.platform.send_crash_recovery_request().await.map_err(to_pyerr)?;
+            cf.supervisor.send_crash_recovery_request().await.map_err(to_pyerr)?;
             Ok(())
         })
     }
