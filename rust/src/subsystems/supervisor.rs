@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-//! Supervisor subsystem - system state, arming, crash recovery, and emergency stop
+//! Supervisor subsystem - Crazyflie state, arming, crash recovery, and emergency stop
 
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
@@ -29,7 +29,7 @@ use crate::error::to_pyerr;
 
 /// Supervisor subsystem
 ///
-/// Monitors the Crazyflie's system state and exposes arming, crash recovery,
+/// Monitors the Crazyflie state and exposes arming, crash recovery,
 /// and emergency stop controls. Obtain via `crazyflie.supervisor()`.
 #[gen_stub_pyclass]
 #[pyclass]
@@ -42,7 +42,7 @@ pub struct Supervisor {
 impl Supervisor {
     /// Read the raw supervisor state bitfield
     ///
-    /// Returns the raw bitfield as an integer. Uses time-based caching (100 ms)
+    /// Returns the raw bitfield as an integer. Uses time-based caching
     /// to avoid flooding the link.
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.int]"))]
     fn read_bitfield<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
@@ -67,7 +67,7 @@ impl Supervisor {
         })
     }
 
-    /// System can be armed - will accept an arming command
+    /// The Crazyflie can be armed - will accept an arming command
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
     fn can_be_armed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
@@ -76,7 +76,7 @@ impl Supervisor {
         })
     }
 
-    /// System is armed
+    /// The Crazyflie is armed
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
     fn is_armed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
@@ -85,7 +85,7 @@ impl Supervisor {
         })
     }
 
-    /// System is configured to automatically arm
+    /// The Crazyflie is configured to automatically arm
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
     fn is_auto_armed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
@@ -166,7 +166,7 @@ impl Supervisor {
         })
     }
 
-    /// Send system arm/disarm request
+    /// Send arm/disarm request
     ///
     /// Arms or disarms the Crazyflie's motors. When disarmed, the motors
     /// will not spin even if thrust commands are sent.
@@ -184,8 +184,7 @@ impl Supervisor {
 
     /// Send crash recovery request
     ///
-    /// Requests recovery from a crashed state. The firmware may allow
-    /// recovery without a full reboot depending on the crash type.
+    /// Requests recovery from a crash state detected by the Crazyflie.
     #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
     fn send_crash_recovery_request<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();

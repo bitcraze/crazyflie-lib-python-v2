@@ -1540,14 +1540,14 @@ class Supervisor:
     r"""
     Supervisor subsystem
 
-    Monitors the Crazyflie's system state and exposes arming, crash recovery,
+    Monitors the Crazyflie state and exposes arming, crash recovery,
     and emergency stop controls. Obtain via `crazyflie.supervisor()`.
     """
     async def read_bitfield(self) -> builtins.int:
         r"""
         Read the raw supervisor state bitfield
 
-        Returns the raw bitfield as an integer. Uses time-based caching (100 ms)
+        Returns the raw bitfield as an integer. Uses time-based caching
         to avoid flooding the link.
         """
     async def active_states(self) -> builtins.list[builtins.str]:
@@ -1556,15 +1556,15 @@ class Supervisor:
         """
     async def can_be_armed(self) -> builtins.bool:
         r"""
-        System can be armed - will accept an arming command
+        The Crazyflie can be armed - will accept an arming command
         """
     async def is_armed(self) -> builtins.bool:
         r"""
-        System is armed
+        The Crazyflie is armed
         """
     async def is_auto_armed(self) -> builtins.bool:
         r"""
-        System is configured to automatically arm
+        The Crazyflie is configured to automatically arm
         """
     async def can_fly(self) -> builtins.bool:
         r"""
@@ -1600,7 +1600,7 @@ class Supervisor:
         """
     async def send_arming_request(self, do_arm: builtins.bool) -> None:
         r"""
-        Send system arm/disarm request
+        Send arm/disarm request
 
         Arms or disarms the Crazyflie's motors. When disarmed, the motors
         will not spin even if thrust commands are sent.
@@ -1612,8 +1612,7 @@ class Supervisor:
         r"""
         Send crash recovery request
 
-        Requests recovery from a crashed state. The firmware may allow
-        recovery without a full reboot depending on the crash type.
+        Requests recovery from a crash state detected by the Crazyflie.
         """
     async def send_emergency_stop(self) -> None:
         r"""
