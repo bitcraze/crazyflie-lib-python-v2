@@ -15,6 +15,10 @@ extension-module = ["pyo3/extension-module"]
 pyo3 = { version = "0.26" }
 pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
 crazyflie-lib = "0.8.1"
+# Not used directly: forces the transitive libusb1-sys (via crazyflie-lib -> rusb)
+# to build its vendored libusb statically instead of linking whatever the build
+# host has installed, so wheels never depend on a system libusb.
+libusb1-sys = { version = "0.7", features = ["vendored"] }
 tokio = { version = "1.48", features = ["full"] }
 futures = "0.3.31"
 pyo3-stub-gen-derive = "0.17.0"
