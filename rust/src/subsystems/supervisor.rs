@@ -40,129 +40,29 @@ pub struct Supervisor {
 #[gen_stub_pymethods]
 #[pymethods]
 impl Supervisor {
-    /// Read the raw supervisor state bitfield
+    /// Read a consistent snapshot of the supervisor state
     ///
-    /// Returns the raw bitfield as an integer. Uses time-based caching
-    /// to avoid flooding the link.
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.int]"))]
-    fn read_bitfield<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    /// All flags on the returned snapshot are decoded from a single bitfield
+    /// read, so they are from the same moment and mutually consistent. Uses
+    /// time-based caching to avoid flooding the link.
+    ///
+    /// The snapshot does not update itself: re-read to get fresh state, for
+    /// example on every iteration when polling.
+    ///
+    /// Example:
+    ///     state = await cf.supervisor().read()
+    ///     if state.can_be_armed and not state.is_armed:
+    ///         await cf.supervisor().send_arming_request(True)
+    ///
+    ///     # When polling, read inside the loop:
+    ///     while not (await cf.supervisor().read()).is_armed:
+    ///         await asyncio.sleep(0.5)
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, SupervisorState]"))]
+    fn read<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let cf = self.cf.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let info = cf.supervisor.read_bitfield().await.map_err(to_pyerr)?;
-            Ok(info.raw)
-        })
-    }
-
-    /// Names of all currently active states
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.list[builtins.str]]"))]
-    fn active_states<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let states = cf.supervisor.read_bitfield().await.map_err(to_pyerr)?
-                .active_states()
-                .into_iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>();
-            Ok(states)
-        })
-    }
-
-    /// The Crazyflie can be armed - will accept an arming command
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn can_be_armed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.can_be_armed())
-        })
-    }
-
-    /// The Crazyflie is armed
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn is_armed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.is_armed())
-        })
-    }
-
-    /// The Crazyflie is configured to automatically arm
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn is_auto_armed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.is_auto_armed())
-        })
-    }
-
-    /// The Crazyflie is ready to fly
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn can_fly<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.can_fly())
-        })
-    }
-
-    /// The Crazyflie is flying
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn is_flying<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.is_flying())
-        })
-    }
-
-    /// The Crazyflie is tumbled (upside down)
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn is_tumbled<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.is_tumbled())
-        })
-    }
-
-    /// The Crazyflie is in the locked state and must be restarted
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn is_locked<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.is_locked())
-        })
-    }
-
-    /// The Crazyflie has crashed
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn is_crashed<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.is_crashed())
-        })
-    }
-
-    /// High level commander is actively flying the drone
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn hl_control_active<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.hl_control_active())
-        })
-    }
-
-    /// High level commander trajectory has finished
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn hl_traj_finished<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.hl_traj_finished())
-        })
-    }
-
-    /// High level commander is disabled and not producing setpoints
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.bool]"))]
-    fn hl_control_disabled<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            Ok(cf.supervisor.read_bitfield().await.map_err(to_pyerr)?.hl_control_disabled())
+            Ok(SupervisorState { info })
         })
     }
 
@@ -221,5 +121,109 @@ impl Supervisor {
             cf.supervisor.send_emergency_stop_watchdog().await.map_err(to_pyerr)?;
             Ok(())
         })
+    }
+}
+
+/// A snapshot of the supervisor state
+///
+/// Decoded from a single supervisor bitfield read: all flags on one snapshot
+/// are from the same moment and mutually consistent. The snapshot does not
+/// update itself - call `Supervisor.read()` again for fresh state.
+#[gen_stub_pyclass]
+#[pyclass(frozen)]
+pub struct SupervisorState {
+    info: crazyflie_lib::subsystems::supervisor::SupervisorInfo,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl SupervisorState {
+    /// Raw bitfield value
+    #[getter]
+    fn raw(&self) -> u16 {
+        self.info.raw
+    }
+
+    /// The Crazyflie can be armed - will accept an arming command
+    #[getter]
+    fn can_be_armed(&self) -> bool {
+        self.info.can_be_armed()
+    }
+
+    /// The Crazyflie is armed
+    #[getter]
+    fn is_armed(&self) -> bool {
+        self.info.is_armed()
+    }
+
+    /// The Crazyflie is configured to automatically arm
+    #[getter]
+    fn is_auto_armed(&self) -> bool {
+        self.info.is_auto_armed()
+    }
+
+    /// The Crazyflie is ready to fly
+    #[getter]
+    fn can_fly(&self) -> bool {
+        self.info.can_fly()
+    }
+
+    /// The Crazyflie is flying
+    #[getter]
+    fn is_flying(&self) -> bool {
+        self.info.is_flying()
+    }
+
+    /// The Crazyflie is tumbled (upside down)
+    #[getter]
+    fn is_tumbled(&self) -> bool {
+        self.info.is_tumbled()
+    }
+
+    /// The Crazyflie is in the locked state and must be restarted
+    #[getter]
+    fn is_locked(&self) -> bool {
+        self.info.is_locked()
+    }
+
+    /// The Crazyflie has crashed
+    #[getter]
+    fn is_crashed(&self) -> bool {
+        self.info.is_crashed()
+    }
+
+    /// High level commander is actively flying the drone
+    #[getter]
+    fn hl_control_active(&self) -> bool {
+        self.info.hl_control_active()
+    }
+
+    /// High level commander trajectory has finished
+    #[getter]
+    fn hl_traj_finished(&self) -> bool {
+        self.info.hl_traj_finished()
+    }
+
+    /// High level commander is disabled and not producing setpoints
+    #[getter]
+    fn hl_control_disabled(&self) -> bool {
+        self.info.hl_control_disabled()
+    }
+
+    /// Names of all active states in this snapshot
+    fn active_states(&self) -> Vec<String> {
+        self.info
+            .active_states()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "SupervisorState(raw=0x{:04x}, active=[{}])",
+            self.info.raw,
+            self.active_states().join(", ")
+        )
     }
 }

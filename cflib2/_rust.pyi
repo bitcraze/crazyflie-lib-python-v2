@@ -1543,60 +1543,25 @@ class Supervisor:
     Monitors the Crazyflie state and exposes arming, crash recovery,
     and emergency stop controls. Obtain via `crazyflie.supervisor()`.
     """
-    async def read_bitfield(self) -> builtins.int:
+    async def read(self) -> SupervisorState:
         r"""
-        Read the raw supervisor state bitfield
+        Read a consistent snapshot of the supervisor state
 
-        Returns the raw bitfield as an integer. Uses time-based caching
-        to avoid flooding the link.
-        """
-    async def active_states(self) -> builtins.list[builtins.str]:
-        r"""
-        Names of all currently active states
-        """
-    async def can_be_armed(self) -> builtins.bool:
-        r"""
-        The Crazyflie can be armed - will accept an arming command
-        """
-    async def is_armed(self) -> builtins.bool:
-        r"""
-        The Crazyflie is armed
-        """
-    async def is_auto_armed(self) -> builtins.bool:
-        r"""
-        The Crazyflie is configured to automatically arm
-        """
-    async def can_fly(self) -> builtins.bool:
-        r"""
-        The Crazyflie is ready to fly
-        """
-    async def is_flying(self) -> builtins.bool:
-        r"""
-        The Crazyflie is flying
-        """
-    async def is_tumbled(self) -> builtins.bool:
-        r"""
-        The Crazyflie is tumbled (upside down)
-        """
-    async def is_locked(self) -> builtins.bool:
-        r"""
-        The Crazyflie is in the locked state and must be restarted
-        """
-    async def is_crashed(self) -> builtins.bool:
-        r"""
-        The Crazyflie has crashed
-        """
-    async def hl_control_active(self) -> builtins.bool:
-        r"""
-        High level commander is actively flying the drone
-        """
-    async def hl_traj_finished(self) -> builtins.bool:
-        r"""
-        High level commander trajectory has finished
-        """
-    async def hl_control_disabled(self) -> builtins.bool:
-        r"""
-        High level commander is disabled and not producing setpoints
+        All flags on the returned snapshot are decoded from a single bitfield
+        read, so they are from the same moment and mutually consistent. Uses
+        time-based caching to avoid flooding the link.
+
+        The snapshot does not update itself: re-read to get fresh state, for
+        example on every iteration when polling.
+
+        Example:
+            state = await cf.supervisor().read()
+            if state.can_be_armed and not state.is_armed:
+                await cf.supervisor().send_arming_request(True)
+
+            # When polling, read inside the loop:
+            while not (await cf.supervisor().read()).is_armed:
+                await asyncio.sleep(0.5)
         """
     async def send_arming_request(self, do_arm: builtins.bool) -> None:
         r"""
@@ -1631,6 +1596,81 @@ class Supervisor:
         stop. Use only when you need automatic failsafe behaviour on
         communication loss.
         """
+
+@typing.final
+class SupervisorState:
+    r"""
+    A snapshot of the supervisor state
+
+    Decoded from a single supervisor bitfield read: all flags on one snapshot
+    are from the same moment and mutually consistent. The snapshot does not
+    update itself - call `Supervisor.read()` again for fresh state.
+    """
+    @property
+    def raw(self) -> builtins.int:
+        r"""
+        Raw bitfield value
+        """
+    @property
+    def can_be_armed(self) -> builtins.bool:
+        r"""
+        The Crazyflie can be armed - will accept an arming command
+        """
+    @property
+    def is_armed(self) -> builtins.bool:
+        r"""
+        The Crazyflie is armed
+        """
+    @property
+    def is_auto_armed(self) -> builtins.bool:
+        r"""
+        The Crazyflie is configured to automatically arm
+        """
+    @property
+    def can_fly(self) -> builtins.bool:
+        r"""
+        The Crazyflie is ready to fly
+        """
+    @property
+    def is_flying(self) -> builtins.bool:
+        r"""
+        The Crazyflie is flying
+        """
+    @property
+    def is_tumbled(self) -> builtins.bool:
+        r"""
+        The Crazyflie is tumbled (upside down)
+        """
+    @property
+    def is_locked(self) -> builtins.bool:
+        r"""
+        The Crazyflie is in the locked state and must be restarted
+        """
+    @property
+    def is_crashed(self) -> builtins.bool:
+        r"""
+        The Crazyflie has crashed
+        """
+    @property
+    def hl_control_active(self) -> builtins.bool:
+        r"""
+        High level commander is actively flying the drone
+        """
+    @property
+    def hl_traj_finished(self) -> builtins.bool:
+        r"""
+        High level commander trajectory has finished
+        """
+    @property
+    def hl_control_disabled(self) -> builtins.bool:
+        r"""
+        High level commander is disabled and not producing setpoints
+        """
+    def active_states(self) -> builtins.list[builtins.str]:
+        r"""
+        Names of all active states in this snapshot
+        """
+    def __repr__(self) -> builtins.str: ...
 
 class SystemError(CrazyflieError):
     r"""

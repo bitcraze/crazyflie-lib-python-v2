@@ -55,16 +55,12 @@ async def main() -> None:
         print("Reading supervisor state:")
         for _ in range(20):
             print("=" * 78)
-            # Gather all state data at once to minimize redundant calls
-            bitfield = await supervisor.read_bitfield()
-            can_fly = await supervisor.can_fly()
-            is_tumbled = await supervisor.is_tumbled()
-            active_states = await supervisor.active_states()
-            # Print the gathered data
-            print(f"Can fly:       {can_fly}")
-            print(f"Is tumbled:    {is_tumbled}")
-            print(f"Bitfield:      0x{bitfield:04x}")
-            print(f"Active states: {active_states}")
+            # One read gives a consistent snapshot of all state flags
+            state = await supervisor.read()
+            print(f"Can fly:       {state.can_fly}")
+            print(f"Is tumbled:    {state.is_tumbled}")
+            print(f"Bitfield:      0x{state.raw:04x}")
+            print(f"Active states: {state.active_states()}")
             print("=" * 78)
             await asyncio.sleep(0.5)
     finally:

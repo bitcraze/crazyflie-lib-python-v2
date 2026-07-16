@@ -39,7 +39,7 @@ use subsystems::{
     Localization, ExternalPose, Lighthouse, LocoPositioning,
     LighthouseAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
-    Supervisor,
+    Supervisor, SupervisorState,
 };
 use toc_cache::{NoTocCache, InMemoryTocCache, FileTocCache};
 
@@ -71,6 +71,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CompressedSegment>()?;
     m.add_class::<LedRingColor>()?;
     m.add_class::<Supervisor>()?;
+    m.add_class::<SupervisorState>()?;
     m.add_class::<NoTocCache>()?;
     m.add_class::<InMemoryTocCache>()?;
     m.add_class::<FileTocCache>()?;

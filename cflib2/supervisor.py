@@ -22,6 +22,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """Supervisor subsystem types"""
 
-from cflib2._rust import Supervisor
+from cflib2._rust import Supervisor, SupervisorState
 
-__all__ = ["Supervisor"]
+__all__ = ["Supervisor", "SupervisorState"]
