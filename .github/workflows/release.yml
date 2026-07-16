@@ -8,10 +8,15 @@ permissions:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
+      fail-fast: false
       matrix:
-        target: [x86_64, aarch64]
+        include:
+          - target: x86_64
+            runner: ubuntu-latest
+          - target: aarch64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,7 +51,15 @@ jobs:
           path: dist
 
   macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64
+            runner: macos-latest
+          - target: x86_64
+            runner: macos-15-intel
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -55,11 +68,11 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          target: aarch64
+          target: ${{ matrix.target }}
           args: --release --out dist
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-aarch64
+          name: wheels-macos-${{ matrix.target }}
           path: dist
 
   sdist:
