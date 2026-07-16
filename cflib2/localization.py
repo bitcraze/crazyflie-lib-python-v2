@@ -23,7 +23,6 @@
 """Localization subsystem types"""
 
 from cflib2._rust import (
-    EmergencyControl,
     ExternalPose,
     Lighthouse,
     LighthouseAngleData,
@@ -33,7 +32,6 @@ from cflib2._rust import (
 )
 
 __all__ = [
-    "EmergencyControl",
     "ExternalPose",
     "Lighthouse",
     "LighthouseAngleData",

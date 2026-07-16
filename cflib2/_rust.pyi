@@ -433,34 +433,6 @@ class DisconnectedError(CrazyflieError):
     ...
 
 @typing.final
-class EmergencyControl:
-    r"""
-    Emergency control interface
-
-    Provides emergency stop functionality that immediately stops all motors.
-    """
-    async def send_emergency_stop(self) -> None:
-        r"""
-        Send emergency stop command
-
-        Immediately stops all motors and puts the Crazyflie into a locked state.
-        The drone will require a reboot before it can fly again.
-
-        Deprecated: Use `crazyflie.supervisor().send_emergency_stop()` instead.
-        """
-    async def send_emergency_stop_watchdog(self) -> None:
-        r"""
-        Send emergency stop watchdog
-
-        Activates/resets a watchdog failsafe that will automatically emergency stop
-        the drone if this message isn't sent every 1000ms. Once activated by the first
-        call, you must continue sending this periodically forever or the drone will
-        automatically emergency stop. Use only if you need automatic failsafe behavior.
-
-        Deprecated: Use `crazyflie.supervisor().send_emergency_stop_watchdog()` instead.
-        """
-
-@typing.final
 class ExternalPose:
     r"""
     External pose interface
@@ -805,10 +777,7 @@ class LedRingColor:
         Intensity percentage (0-100); values above 100 are clamped to 100
         """
     @intensity.setter
-    def intensity(self, value: builtins.int) -> None:
-        r"""
-        Intensity percentage (0-100); values above 100 are clamped to 100
-        """
+    def intensity(self, value: builtins.int) -> None: ...
     def __new__(
         cls,
         r: builtins.int = 0,
@@ -823,7 +792,7 @@ class LedRingColor:
         * `r` - Red component (0-255, default 0)
         * `g` - Green component (0-255, default 0)
         * `b` - Blue component (0-255, default 0)
-        * `intensity` - Intensity percentage (0-100, default 100); clamped to 100 if higher
+        * `intensity` - Intensity percentage (0-100, default 100); values above 100 are clamped to 100
         """
     def set(
         self,
@@ -978,10 +947,6 @@ class Localization:
     r"""
     Localization subsystem wrapper
     """
-    def emergency(self) -> EmergencyControl:
-        r"""
-        Get the emergency control interface
-        """
     def external_pose(self) -> ExternalPose:
         r"""
         Get the external pose interface
@@ -1488,26 +1453,6 @@ class Platform:
 
         As such, this shall only be used for test purpose in a controlled environment.
         """
-    async def send_arming_request(self, do_arm: builtins.bool) -> None:
-        r"""
-        Send system arm/disarm request
-
-        Arms or disarms the Crazyflie's safety systems. When disarmed, the motors
-        will not spin even if thrust commands are sent.
-
-        Deprecated: Use `crazyflie.supervisor().send_arming_request()` instead.
-
-        # Arguments
-        * `do_arm` - true to arm, false to disarm
-        """
-    async def send_crash_recovery_request(self) -> None:
-        r"""
-        Send crash recovery request
-
-        Requests recovery from a crash state detected by the Crazyflie.
-
-        Deprecated: Use `crazyflie.supervisor().send_crash_recovery_request()` instead.
-        """
     async def get_app_channel(self) -> typing.Optional[AppChannel]:
         r"""
         Get the bidirectional app channel for custom communication
@@ -1602,46 +1547,12 @@ class Supervisor:
         r"""
         Read the raw supervisor state bitfield
 
-        Returns the raw bitfield as an integer. Uses time-based caching
-        (100 ms) to avoid flooding the link.
+        Returns the raw bitfield as an integer. Uses time-based caching (100 ms)
+        to avoid flooding the link.
         """
     async def active_states(self) -> builtins.list[builtins.str]:
         r"""
         Names of all currently active states
-        """
-    async def send_arming_request(self, do_arm: builtins.bool) -> None:
-        r"""
-        Send system arm/disarm request
-
-        Arms or disarms the Crazyflie's motors. When disarmed, the motors
-        will not spin even if thrust commands are sent.
-
-        Args:
-            do_arm: True to arm, False to disarm
-        """
-    async def send_crash_recovery_request(self) -> None:
-        r"""
-        Send crash recovery request
-
-        Requests recovery from a crashed state. The firmware may allow
-        recovery without a full reboot depending on the crash type.
-        """
-    async def send_emergency_stop(self) -> None:
-        r"""
-        Send emergency stop
-
-        Immediately stops all motors and puts the Crazyflie into a locked state.
-        The drone will require a reboot before it can fly again.
-        """
-    async def send_emergency_stop_watchdog(self) -> None:
-        r"""
-        Send emergency stop watchdog
-
-        Activates/resets a watchdog failsafe that will automatically emergency
-        stop the drone if this message is not sent every 1000 ms. Once
-        activated, you must keep sending this periodically or the drone will
-        stop. Use only when you need automatic failsafe behaviour on
-        communication loss.
         """
     async def can_be_armed(self) -> builtins.bool:
         r"""
@@ -1686,6 +1597,40 @@ class Supervisor:
     async def hl_control_disabled(self) -> builtins.bool:
         r"""
         High level commander is disabled and not producing setpoints
+        """
+    async def send_arming_request(self, do_arm: builtins.bool) -> None:
+        r"""
+        Send system arm/disarm request
+
+        Arms or disarms the Crazyflie's motors. When disarmed, the motors
+        will not spin even if thrust commands are sent.
+
+        Args:
+            do_arm: True to arm, False to disarm
+        """
+    async def send_crash_recovery_request(self) -> None:
+        r"""
+        Send crash recovery request
+
+        Requests recovery from a crashed state. The firmware may allow
+        recovery without a full reboot depending on the crash type.
+        """
+    async def send_emergency_stop(self) -> None:
+        r"""
+        Send emergency stop
+
+        Immediately stops all motors and puts the Crazyflie into a locked state.
+        The drone will require a reboot before it can fly again.
+        """
+    async def send_emergency_stop_watchdog(self) -> None:
+        r"""
+        Send emergency stop watchdog
+
+        Activates/resets a watchdog failsafe that will automatically emergency
+        stop the drone if this message is not sent every 1000 ms. Once
+        activated, you must keep sending this periodically or the drone will
+        stop. Use only when you need automatic failsafe behaviour on
+        communication loss.
         """
 
 class SystemError(CrazyflieError):

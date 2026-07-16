@@ -36,7 +36,7 @@ use crazyflie::Crazyflie;
 use link_context::LinkContext;
 use subsystems::{
     Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, Platform, AppChannel,
-    Localization, EmergencyControl, ExternalPose, Lighthouse, LocoPositioning,
+    Localization, ExternalPose, Lighthouse, LocoPositioning,
     LighthouseAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
     Supervisor,
@@ -59,7 +59,6 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Platform>()?;
     m.add_class::<AppChannel>()?;
     m.add_class::<Localization>()?;
-    m.add_class::<EmergencyControl>()?;
     m.add_class::<ExternalPose>()?;
     m.add_class::<Lighthouse>()?;
     m.add_class::<LocoPositioning>()?;

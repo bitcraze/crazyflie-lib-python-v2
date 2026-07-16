@@ -19,10 +19,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-//! Localization subsystem - emergency stop, external pose, lighthouse, and loco positioning
+//! Localization subsystem - external pose, lighthouse, and loco positioning
 
 use pyo3::prelude::*;
-use pyo3::PyTypeInfo;
 use pyo3_stub_gen::derive::*;
 use std::sync::Arc;
 use futures::stream::Stream;
@@ -40,13 +39,6 @@ pub struct Localization {
 #[gen_stub_pymethods]
 #[pymethods]
 impl Localization {
-    /// Get the emergency control interface
-    fn emergency(&self) -> EmergencyControl {
-        EmergencyControl {
-            cf: self.cf.clone(),
-        }
-    }
-
     /// Get the external pose interface
     fn external_pose(&self) -> ExternalPose {
         ExternalPose {
@@ -64,57 +56,6 @@ impl Localization {
         LocoPositioning {
             cf: self.cf.clone(),
         }
-    }
-}
-
-/// Emergency control interface
-///
-/// Provides emergency stop functionality that immediately stops all motors.
-#[gen_stub_pyclass]
-#[pyclass]
-pub struct EmergencyControl {
-    cf: Arc<crazyflie_lib::Crazyflie>,
-}
-
-#[gen_stub_pymethods]
-#[pymethods]
-impl EmergencyControl {
-    /// Send emergency stop command
-    ///
-    /// Immediately stops all motors and puts the Crazyflie into a locked state.
-    /// The drone will require a reboot before it can fly again.
-    ///
-    /// Deprecated: use `crazyflie.supervisor().send_emergency_stop()` instead.
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn send_emergency_stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        // Issue deprecation warning (using UserWarning for visibility)
-        PyErr::warn(py, &pyo3::exceptions::PyUserWarning::type_object(py), c"localization.emergency().send_emergency_stop() is deprecated. Use supervisor.send_emergency_stop() instead.", 2)?;
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.supervisor.send_emergency_stop().await
-                .map_err(crate::error::to_pyerr)?;
-            Ok(())
-        })
-    }
-
-    /// Send emergency stop watchdog
-    ///
-    /// Activates/resets a watchdog failsafe that will automatically emergency stop
-    /// the drone if this message isn't sent every 1000ms. Once activated by the first
-    /// call, you must continue sending this periodically forever or the drone will
-    /// automatically emergency stop. Use only if you need automatic failsafe behavior.
-    ///
-    /// Deprecated: use `crazyflie.supervisor().send_emergency_stop_watchdog()` instead.
-    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, None]"))]
-    fn send_emergency_stop_watchdog<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        // Issue deprecation warning (using UserWarning for visibility)
-        PyErr::warn(py, &pyo3::exceptions::PyUserWarning::type_object(py), c"localization.emergency().send_emergency_stop_watchdog() is deprecated. Use supervisor.send_emergency_stop_watchdog() instead.", 2)?;
-        let cf = self.cf.clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            cf.supervisor.send_emergency_stop_watchdog().await
-                .map_err(crate::error::to_pyerr)?;
-            Ok(())
-        })
     }
 }
 
