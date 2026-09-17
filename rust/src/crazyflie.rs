@@ -28,7 +28,7 @@ use std::sync::Arc;
 
 use crate::error::to_pyerr;
 use crate::link_context::LinkContext;
-use crate::subsystems::{Commander, Console, HighLevelCommander, Localization, Memory, Param, Platform, Log};
+use crate::subsystems::{Commander, Console, HighLevelCommander, Localization, Memory, Param, Platform, Log, Supervisor};
 use crate::toc_cache::{NoTocCache, InMemoryTocCache, FileTocCache};
 
 
@@ -241,6 +241,13 @@ impl Crazyflie {
     /// Get the platform subsystem
     fn platform(&self) -> Platform {
         Platform {
+            cf: self.inner.clone(),
+        }
+    }
+
+    /// Get the supervisor subsystem
+    fn supervisor(&self) -> Supervisor {
+        Supervisor {
             cf: self.inner.clone(),
         }
     }

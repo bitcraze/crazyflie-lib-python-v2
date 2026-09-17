@@ -69,6 +69,9 @@ find = { exclude = ["examples", "test"] }
 [tool.maturin]
 # Path to Cargo.toml for the Rust extension
 manifest-path = "rust/Cargo.toml"
+# Maturin declares License-File in the sdist metadata but only copies the file
+# into wheels; without this include PyPI rejects the sdist for the missing file
+include = [{ path = "LICENSE.txt", format = "sdist" }]
 # Python source directory
 python-source = "."
 # Include Python files from cflib2

@@ -454,7 +454,7 @@ async def main() -> None:
 
         # Arm the Crazyflie
         print("Arming...")
-        await cf.platform().send_arming_request(True)
+        await cf.supervisor().send_arming_request(True)
         await asyncio.sleep(1.0)
 
         takeoff_yaw = 3.14 / 2 if args.relative_yaw else 0.0

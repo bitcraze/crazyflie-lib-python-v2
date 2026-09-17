@@ -70,6 +70,24 @@ class Commander:
 
         Note: Thrust is locked by default for safety. To unlock, send a setpoint with `thrust = 0` once before sending nonzero thrust values.
         """
+    async def send_setpoint_full_state(
+        self,
+        pos: typing.Sequence[builtins.float],
+        vel: typing.Sequence[builtins.float],
+        acc: typing.Sequence[builtins.float],
+        orientation: typing.Sequence[builtins.float],
+        ang_vel: typing.Sequence[builtins.float],
+    ) -> None:
+        r"""
+        Sends a full-state setpoint in world coordinates.
+
+        # Arguments
+        * `pos` - Target position [x, y, z] (meters, world frame)
+        * `vel` - Target velocity [vx, vy, vz] (meters/second, world frame)
+        * `acc` - Target acceleration [ax, ay, az] (meters/second^2, world frame)
+        * `orientation` - Target orientation quaternion [qx, qy, qz, qw] (unitless, world frame)
+        * `ang_vel` - Target angular velocity [ωx, ωy, ωz] (radians/second, body frame)
+        """
     async def send_setpoint_position(
         self,
         x: builtins.float,
@@ -393,6 +411,10 @@ class Crazyflie:
         r"""
         Get the platform subsystem
         """
+    def supervisor(self) -> Supervisor:
+        r"""
+        Get the supervisor subsystem
+        """
     def __str__(self) -> builtins.str: ...
     def __repr__(self) -> builtins.str: ...
 
@@ -409,30 +431,6 @@ class DisconnectedError(CrazyflieError):
     """
 
     ...
-
-@typing.final
-class EmergencyControl:
-    r"""
-    Emergency control interface
-
-    Provides emergency stop functionality that immediately stops all motors.
-    """
-    async def send_emergency_stop(self) -> None:
-        r"""
-        Send emergency stop command
-
-        Immediately stops all motors and puts the Crazyflie into a locked state.
-        The drone will require a reboot before it can fly again.
-        """
-    async def send_emergency_stop_watchdog(self) -> None:
-        r"""
-        Send emergency stop watchdog
-
-        Activates/resets a watchdog failsafe that will automatically emergency stop
-        the drone if this message isn't sent every 1000ms. Once activated by the first
-        call, you must continue sending this periodically forever or the drone will
-        automatically emergency stop. Use only if you need automatic failsafe behavior.
-        """
 
 @typing.final
 class ExternalPose:
@@ -949,10 +947,6 @@ class Localization:
     r"""
     Localization subsystem wrapper
     """
-    def emergency(self) -> EmergencyControl:
-        r"""
-        Get the emergency control interface
-        """
     def external_pose(self) -> ExternalPose:
         r"""
         Get the external pose interface
@@ -1483,22 +1477,6 @@ class Platform:
 
         As such, this shall only be used for test purpose in a controlled environment.
         """
-    async def send_arming_request(self, do_arm: builtins.bool) -> None:
-        r"""
-        Send system arm/disarm request
-
-        Arms or disarms the Crazyflie's safety systems. When disarmed, the motors
-        will not spin even if thrust commands are sent.
-
-        # Arguments
-        * `do_arm` - true to arm, false to disarm
-        """
-    async def send_crash_recovery_request(self) -> None:
-        r"""
-        Send crash recovery request
-
-        Requests recovery from a crash state detected by the Crazyflie.
-        """
     async def get_app_channel(self) -> typing.Optional[AppChannel]:
         r"""
         Get the bidirectional app channel for custom communication
@@ -1580,6 +1558,143 @@ class ProtocolVersionNotSupportedError(CrazyflieError):
     """
 
     ...
+
+@typing.final
+class Supervisor:
+    r"""
+    Supervisor subsystem
+
+    Monitors the Crazyflie state and exposes arming, crash recovery,
+    and emergency stop controls. Obtain via `crazyflie.supervisor()`.
+    """
+    async def read(self) -> SupervisorState:
+        r"""
+        Read a consistent snapshot of the supervisor state
+
+        All flags on the returned snapshot are decoded from a single bitfield
+        read, so they are from the same moment and mutually consistent. Uses
+        time-based caching to avoid flooding the link.
+
+        The snapshot does not update itself: re-read to get fresh state, for
+        example on every iteration when polling.
+
+        Example:
+            state = await cf.supervisor().read()
+            if state.can_be_armed and not state.is_armed:
+                await cf.supervisor().send_arming_request(True)
+
+            # When polling, read inside the loop:
+            while not (await cf.supervisor().read()).is_armed:
+                await asyncio.sleep(0.5)
+        """
+    async def send_arming_request(self, do_arm: builtins.bool) -> None:
+        r"""
+        Send arm/disarm request
+
+        Arms or disarms the Crazyflie's motors. When disarmed, the motors
+        will not spin even if thrust commands are sent.
+
+        Args:
+            do_arm: True to arm, False to disarm
+        """
+    async def send_crash_recovery_request(self) -> None:
+        r"""
+        Send crash recovery request
+
+        Requests recovery from a crash state detected by the Crazyflie.
+        """
+    async def send_emergency_stop(self) -> None:
+        r"""
+        Send emergency stop
+
+        Immediately stops all motors and puts the Crazyflie into a locked state.
+        The drone will require a reboot before it can fly again.
+        """
+    async def send_emergency_stop_watchdog(self) -> None:
+        r"""
+        Send emergency stop watchdog
+
+        Activates/resets a watchdog failsafe that will automatically emergency
+        stop the drone if this message is not sent every 1000 ms. Once
+        activated, you must keep sending this periodically or the drone will
+        stop. Use only when you need automatic failsafe behaviour on
+        communication loss.
+        """
+
+@typing.final
+class SupervisorState:
+    r"""
+    A snapshot of the supervisor state
+
+    Decoded from a single supervisor bitfield read: all flags on one snapshot
+    are from the same moment and mutually consistent. The snapshot does not
+    update itself - call `Supervisor.read()` again for fresh state.
+    """
+    @property
+    def raw(self) -> builtins.int:
+        r"""
+        Raw bitfield value
+        """
+    @property
+    def can_be_armed(self) -> builtins.bool:
+        r"""
+        The Crazyflie can be armed - will accept an arming command
+        """
+    @property
+    def is_armed(self) -> builtins.bool:
+        r"""
+        The Crazyflie is armed
+        """
+    @property
+    def is_auto_armed(self) -> builtins.bool:
+        r"""
+        The Crazyflie is configured to automatically arm
+        """
+    @property
+    def can_fly(self) -> builtins.bool:
+        r"""
+        The Crazyflie is ready to fly
+        """
+    @property
+    def is_flying(self) -> builtins.bool:
+        r"""
+        The Crazyflie is flying
+        """
+    @property
+    def is_tumbled(self) -> builtins.bool:
+        r"""
+        The Crazyflie is tumbled (upside down)
+        """
+    @property
+    def is_locked(self) -> builtins.bool:
+        r"""
+        The Crazyflie is in the locked state and must be restarted
+        """
+    @property
+    def is_crashed(self) -> builtins.bool:
+        r"""
+        The Crazyflie has crashed
+        """
+    @property
+    def hl_control_active(self) -> builtins.bool:
+        r"""
+        High level commander is actively flying the drone
+        """
+    @property
+    def hl_traj_finished(self) -> builtins.bool:
+        r"""
+        High level commander trajectory has finished
+        """
+    @property
+    def hl_control_disabled(self) -> builtins.bool:
+        r"""
+        High level commander is disabled and not producing setpoints
+        """
+    def active_states(self) -> builtins.list[builtins.str]:
+        r"""
+        Names of all active states in this snapshot
+        """
+    def __repr__(self) -> builtins.str: ...
 
 class SystemError(CrazyflieError):
     r"""

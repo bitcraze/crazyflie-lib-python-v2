@@ -61,10 +61,8 @@ async def main() -> None:
     cf = await Crazyflie.connect_from_uri(context, args.uri)
     print("Connected!")
 
-    platform = cf.platform()
+    supervisor = cf.supervisor()
     commander = cf.commander()
-    localization = cf.localization()
-    emergency = localization.emergency()
 
     try:
         print("\n⚠️  WARNING: This will ARM and SPIN the motors!")
@@ -75,7 +73,7 @@ async def main() -> None:
 
         # Arm the Crazyflie
         print("\n1. Arming the Crazyflie...")
-        await platform.send_arming_request(do_arm=True)
+        await supervisor.send_arming_request(do_arm=True)
         await asyncio.sleep(0.3)
         print("   ✓ Armed!")
 
@@ -96,7 +94,7 @@ async def main() -> None:
 
         # Activate watchdog
         print("\n4. Activating watchdog (1000ms timeout)...")
-        await emergency.send_emergency_stop_watchdog()
+        await supervisor.send_emergency_stop_watchdog()
         print("   ✓ Watchdog activated!")
 
         print(
@@ -111,7 +109,7 @@ async def main() -> None:
             sys.stdout.flush()
 
             # Send watchdog message
-            await emergency.send_emergency_stop_watchdog()
+            await supervisor.send_emergency_stop_watchdog()
 
             # Keep motors spinning and wait 800ms
             for _ in range(8):
@@ -143,7 +141,7 @@ async def main() -> None:
     except KeyboardInterrupt:
         print("\n\n⚠️  Interrupted! Attempting to disarm for safety...")
         try:
-            await platform.send_arming_request(do_arm=False)
+            await supervisor.send_arming_request(do_arm=False)
             print("   ✓ Disarmed!")
         except Exception:
             print("   ⚠️  Could not disarm (may already be in emergency state)")

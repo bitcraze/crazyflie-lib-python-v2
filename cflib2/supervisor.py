@@ -4,7 +4,7 @@
 # | / ,--'  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
 #    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
 #
-# Copyright (C) 2025 Bitcraze AB
+# Copyright (C) 2026 Bitcraze AB
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,22 +18,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""Localization subsystem types"""
+"""Supervisor subsystem types"""
 
-from cflib2._rust import (
-    ExternalPose,
-    Lighthouse,
-    LighthouseAngleData,
-    LighthouseAngles,
-    Localization,
-    LocoPositioning,
-)
+from cflib2._rust import Supervisor, SupervisorState
 
-__all__ = [
-    "ExternalPose",
-    "Lighthouse",
-    "LighthouseAngleData",
-    "LighthouseAngles",
-    "Localization",
-    "LocoPositioning",
-]
+__all__ = ["Supervisor", "SupervisorState"]
