@@ -21,8 +21,10 @@
 
 //! Parameter subsystem - read and write configuration parameters
 
+use futures::StreamExt;
 use pyo3::prelude::*;
 use pyo3_stub_gen_derive::*;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::error::to_pyerr;
@@ -59,6 +61,39 @@ impl PersistentParamState {
     #[gen_stub(override_return_type(type_repr = "int | float | None"))]
     fn stored_value(&self, py: Python<'_>) -> Py<PyAny> {
         self.stored_value.clone_ref(py)
+    }
+}
+
+/// Async iterator that yields `(name, value)` tuples when parameters change
+#[gen_stub_pyclass]
+#[pyclass]
+pub struct ParamChangeStream {
+    rx: Arc<tokio::sync::Mutex<Pin<Box<dyn futures::Stream<Item = (String, crazyflie_lib::Value)> + Send>>>>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl ParamChangeStream {
+    /// Return self (async iterator protocol)
+    fn __aiter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    /// Return the next `(name, value)` tuple, or raise StopAsyncIteration
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, tuple[str, int | float]]"))]
+    fn __anext__<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let rx = self.rx.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let mut rx = rx.lock().await;
+            match rx.next().await {
+                Some((parameter_name, parameter_value)) => Python::attach(|py| {
+                    let py_parameter_name: Bound<'_, pyo3::types::PyString> = parameter_name.into_pyobject(py)?;
+                    let py_parameter_value = value_to_python(py, parameter_value)?;
+                    (py_parameter_name, py_parameter_value).into_pyobject(py).map(|b: Bound<'_, pyo3::types::PyTuple>| b.into_any().unbind())
+                }),
+                None => Err(pyo3::exceptions::PyStopAsyncIteration::new_err(())),
+            }
+        })
     }
 }
 
@@ -247,6 +282,25 @@ impl Param {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let value = cf.param.get_default_value(&name).await.map_err(to_pyerr)?;
             Python::attach(|py| value_to_python(py, value))
+        })
+    }
+
+    /// Watch for parameter value changes
+    ///
+    /// Returns an async iterator that yields `(name, value)` tuples whenever
+    /// any parameter value changes. Each call creates an independent stream.
+    ///
+    /// # Returns
+    /// An async iterator yielding `(str, int | float)` tuples
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, ParamChangeStream]"))]
+    fn watch_change<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let stream = cf.param.watch_change().await.map_err(to_pyerr)?;
+            let rx = Arc::new(tokio::sync::Mutex::new(Box::pin(stream) as Pin<Box<dyn futures::Stream<Item = (String, crazyflie_lib::Value)> + Send>>));
+            Python::attach(|py| {
+                Ok(Py::new(py, ParamChangeStream { rx })?.into_any())
+            })
         })
     }
 

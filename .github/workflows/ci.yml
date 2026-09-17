@@ -26,10 +26,10 @@ jobs:
         run: uv sync --group dev
 
       - name: Lint (ruff)
-        run: uvx ruff check .
+        run: uvx ruff@0.16.8 check .
 
       - name: Format (ruff)
-        run: uvx ruff format --check .
+        run: uvx ruff@0.16.8 format --check .
 
       - name: Type check (ty)
         run: uv run ty check

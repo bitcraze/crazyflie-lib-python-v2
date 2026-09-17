@@ -1343,6 +1343,16 @@ class Param:
         # Returns
         The default value (int or float depending on parameter type)
         """
+    async def watch_change(self) -> ParamChangeStream:
+        r"""
+        Watch for parameter value changes
+
+        Returns an async iterator that yields `(name, value)` tuples whenever
+        any parameter value changes. Each call creates an independent stream.
+
+        # Returns
+        An async iterator yielding `(str, int | float)` tuples
+        """
     async def persistent_get_state(self, name: builtins.str) -> PersistentParamState:
         r"""
         Get the persistent storage state of a parameter
@@ -1378,6 +1388,20 @@ class Param:
 
         # Arguments
         * `name` - Parameter name in format "group.name"
+        """
+
+@typing.final
+class ParamChangeStream:
+    r"""
+    Async iterator that yields `(name, value)` tuples when parameters change
+    """
+    def __aiter__(self) -> ParamChangeStream:
+        r"""
+        Return self (async iterator protocol)
+        """
+    async def __anext__(self) -> tuple[str, int | float]:
+        r"""
+        Return the next `(name, value)` tuple, or raise StopAsyncIteration
         """
 
 class ParamError(CrazyflieError):

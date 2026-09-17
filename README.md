@@ -12,6 +12,7 @@
 import asyncio
 from cflib2 import Crazyflie, LinkContext
 
+
 async def main():
     context = LinkContext()
 
@@ -25,6 +26,7 @@ async def main():
     value = await param.get("pm.lowVoltage")
     print(f"Low voltage threshold: {value}V")
     await cf.disconnect()
+
 
 asyncio.run(main())
 ```
@@ -46,6 +48,8 @@ See the [examples/](examples/) directory for more.
    uv sync --group dev
    ```
    This installs the `dev` dependency group which provides `maturin`, `pre-commit`, `pytest`, and other development tools. Commands prefixed with `uv run` below require this group.
+
+   It also triggers maturin to build Rust libraries used by Python.
 
 2. **Install pre-commit hooks:**
    ```bash
