@@ -26,10 +26,13 @@
 //! [`CompressedStart`], and [`CompressedSegment`], then uploaded
 //! via the [`Memory`] subsystem. LED ring colors are set using
 //! [`LedRingColor`] and written via [`Memory::write_led_ring`].
+//! Lighthouse base station configuration is read and written as
+//! [`LighthouseBsGeometry`] and [`LighthouseBsCalibration`].
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use pyo3_stub_gen::derive::*;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::to_pyerr;
@@ -295,6 +298,288 @@ impl CompressedSegment {
     }
 }
 
+/// Calibration data for one sweep of a lighthouse base station.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LighthouseCalibrationSweep {
+    /// Phase offset
+    #[pyo3(get, set)]
+    phase: f32,
+    /// Tilt angle
+    #[pyo3(get, set)]
+    tilt: f32,
+    /// Curve compensation
+    #[pyo3(get, set)]
+    curve: f32,
+    /// Gibbs magnitude
+    #[pyo3(get, set)]
+    gibmag: f32,
+    /// Gibbs phase
+    #[pyo3(get, set)]
+    gibphase: f32,
+    /// OGEE magnitude
+    #[pyo3(get, set)]
+    ogeemag: f32,
+    /// OGEE phase
+    #[pyo3(get, set)]
+    ogeephase: f32,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LighthouseCalibrationSweep {
+    /// Create a new LighthouseCalibrationSweep. All values default to 0.0.
+    #[new]
+    #[pyo3(signature = (phase=0.0, tilt=0.0, curve=0.0, gibmag=0.0, gibphase=0.0, ogeemag=0.0, ogeephase=0.0))]
+    fn new(phase: f32, tilt: f32, curve: f32, gibmag: f32, gibphase: f32, ogeemag: f32, ogeephase: f32) -> Self {
+        Self { phase, tilt, curve, gibmag, gibphase, ogeemag, ogeephase }
+    }
+}
+
+impl From<&crazyflie_lib::subsystems::memory::LighthouseCalibrationSweep> for LighthouseCalibrationSweep {
+    fn from(sweep: &crazyflie_lib::subsystems::memory::LighthouseCalibrationSweep) -> Self {
+        Self {
+            phase: sweep.phase,
+            tilt: sweep.tilt,
+            curve: sweep.curve,
+            gibmag: sweep.gibmag,
+            gibphase: sweep.gibphase,
+            ogeemag: sweep.ogeemag,
+            ogeephase: sweep.ogeephase,
+        }
+    }
+}
+
+impl LighthouseCalibrationSweep {
+    fn to_rust(&self) -> crazyflie_lib::subsystems::memory::LighthouseCalibrationSweep {
+        crazyflie_lib::subsystems::memory::LighthouseCalibrationSweep {
+            phase: self.phase,
+            tilt: self.tilt,
+            curve: self.curve,
+            gibmag: self.gibmag,
+            gibphase: self.gibphase,
+            ogeemag: self.ogeemag,
+            ogeephase: self.ogeephase,
+        }
+    }
+}
+
+/// Calibration data for one lighthouse base station.
+///
+/// `sweeps` returns copies, so to change a sweep, modify it and assign the
+/// whole list back: `calib.sweeps = [sweep0, sweep1]`.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LighthouseBsCalibration {
+    sweeps: [LighthouseCalibrationSweep; 2],
+    /// Base station UID
+    #[pyo3(get, set)]
+    uid: u32,
+    /// Whether this calibration data is valid
+    #[pyo3(get, set)]
+    valid: bool,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LighthouseBsCalibration {
+    /// Create a new LighthouseBsCalibration.
+    ///
+    /// # Arguments
+    /// * `sweeps` - List of exactly 2 LighthouseCalibrationSweep (default: two zeroed sweeps)
+    /// * `uid` - Base station UID (default 0)
+    /// * `valid` - Whether the data is valid (default False)
+    #[new]
+    #[pyo3(signature = (sweeps=None, uid=0, valid=false))]
+    fn new(sweeps: Option<Vec<LighthouseCalibrationSweep>>, uid: u32, valid: bool) -> PyResult<Self> {
+        let sweeps = match sweeps {
+            Some(sweeps) => Self::sweeps_from_vec(sweeps)?,
+            None => std::array::from_fn(|_| LighthouseCalibrationSweep::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+        };
+        Ok(Self { sweeps, uid, valid })
+    }
+
+    /// Calibration for the 2 sweeps (list of 2 LighthouseCalibrationSweep)
+    #[getter]
+    fn sweeps(&self) -> Vec<LighthouseCalibrationSweep> {
+        self.sweeps.to_vec()
+    }
+
+    #[setter]
+    fn set_sweeps(&mut self, sweeps: Vec<LighthouseCalibrationSweep>) -> PyResult<()> {
+        self.sweeps = Self::sweeps_from_vec(sweeps)?;
+        Ok(())
+    }
+}
+
+impl LighthouseBsCalibration {
+    fn sweeps_from_vec(sweeps: Vec<LighthouseCalibrationSweep>) -> PyResult<[LighthouseCalibrationSweep; 2]> {
+        let len = sweeps.len();
+        sweeps.try_into().map_err(|_| PyValueError::new_err(
+            format!("Expected 2 sweeps, got {}", len)
+        ))
+    }
+
+    fn to_rust(&self) -> crazyflie_lib::subsystems::memory::LighthouseBsCalibration {
+        crazyflie_lib::subsystems::memory::LighthouseBsCalibration {
+            sweeps: [self.sweeps[0].to_rust(), self.sweeps[1].to_rust()],
+            uid: self.uid,
+            valid: self.valid,
+        }
+    }
+}
+
+impl From<&crazyflie_lib::subsystems::memory::LighthouseBsCalibration> for LighthouseBsCalibration {
+    fn from(calib: &crazyflie_lib::subsystems::memory::LighthouseBsCalibration) -> Self {
+        Self {
+            sweeps: [(&calib.sweeps[0]).into(), (&calib.sweeps[1]).into()],
+            uid: calib.uid,
+            valid: calib.valid,
+        }
+    }
+}
+
+/// Geometry data (position and orientation) for one lighthouse base station.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LighthouseBsGeometry {
+    origin: [f32; 3],
+    rotation_matrix: [[f32; 3]; 3],
+    /// Whether this geometry data is valid
+    #[pyo3(get, set)]
+    valid: bool,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LighthouseBsGeometry {
+    /// Create a new LighthouseBsGeometry.
+    ///
+    /// # Arguments
+    /// * `origin` - Position [x, y, z] in meters (default all zeros)
+    /// * `rotation_matrix` - 3x3 rotation matrix as a list of 3 rows (default all zeros)
+    /// * `valid` - Whether the data is valid (default False)
+    #[new]
+    #[pyo3(signature = (origin=None, rotation_matrix=None, valid=false))]
+    fn new(origin: Option<Vec<f32>>, rotation_matrix: Option<Vec<Vec<f32>>>, valid: bool) -> PyResult<Self> {
+        let origin = match origin {
+            Some(origin) => Self::origin_from_vec(origin)?,
+            None => [0.0; 3],
+        };
+        let rotation_matrix = match rotation_matrix {
+            Some(rotation_matrix) => Self::rotation_matrix_from_vec(rotation_matrix)?,
+            None => [[0.0; 3]; 3],
+        };
+        Ok(Self { origin, rotation_matrix, valid })
+    }
+
+    /// Position of the base station [x, y, z] in meters
+    #[getter]
+    fn origin(&self) -> Vec<f32> {
+        self.origin.to_vec()
+    }
+
+    #[setter]
+    fn set_origin(&mut self, origin: Vec<f32>) -> PyResult<()> {
+        self.origin = Self::origin_from_vec(origin)?;
+        Ok(())
+    }
+
+    /// Rotation matrix of the base station, as a list of 3 rows with 3 values each
+    #[getter]
+    fn rotation_matrix(&self) -> Vec<Vec<f32>> {
+        self.rotation_matrix.iter().map(|row| row.to_vec()).collect()
+    }
+
+    #[setter]
+    fn set_rotation_matrix(&mut self, rotation_matrix: Vec<Vec<f32>>) -> PyResult<()> {
+        self.rotation_matrix = Self::rotation_matrix_from_vec(rotation_matrix)?;
+        Ok(())
+    }
+}
+
+impl LighthouseBsGeometry {
+    fn origin_from_vec(origin: Vec<f32>) -> PyResult<[f32; 3]> {
+        let len = origin.len();
+        origin.try_into().map_err(|_| PyValueError::new_err(
+            format!("origin must have 3 values [x, y, z], got {}", len)
+        ))
+    }
+
+    fn rotation_matrix_from_vec(rotation_matrix: Vec<Vec<f32>>) -> PyResult<[[f32; 3]; 3]> {
+        let error = || PyValueError::new_err("rotation_matrix must be 3 rows with 3 values each");
+        let rows: [Vec<f32>; 3] = rotation_matrix.try_into().map_err(|_| error())?;
+        let mut result = [[0.0; 3]; 3];
+        for (row, values) in result.iter_mut().zip(rows) {
+            *row = values.try_into().map_err(|_| error())?;
+        }
+        Ok(result)
+    }
+
+    fn to_rust(&self) -> crazyflie_lib::subsystems::memory::LighthouseBsGeometry {
+        crazyflie_lib::subsystems::memory::LighthouseBsGeometry {
+            origin: self.origin,
+            rotation_matrix: self.rotation_matrix,
+            valid: self.valid,
+        }
+    }
+}
+
+impl From<&crazyflie_lib::subsystems::memory::LighthouseBsGeometry> for LighthouseBsGeometry {
+    fn from(geo: &crazyflie_lib::subsystems::memory::LighthouseBsGeometry) -> Self {
+        Self {
+            origin: geo.origin,
+            rotation_matrix: geo.rotation_matrix,
+            valid: geo.valid,
+        }
+    }
+}
+
+/// Result of writing several lighthouse base station slots.
+///
+/// Returned by `Memory.write_lighthouse_geometries()` and
+/// `Memory.write_lighthouse_calibrations()`. Use `written` to decide which
+/// slots to persist with `Lighthouse.persist_lighthouse_data()`.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LighthouseWriteReport {
+    /// Base station IDs that were written, in ascending order
+    #[pyo3(get)]
+    written: Vec<u8>,
+    /// Base station IDs the Crazyflie rejected because it does not support
+    /// that many base stations, in ascending order
+    #[pyo3(get)]
+    rejected: Vec<u8>,
+}
+
+impl From<crazyflie_lib::subsystems::memory::LighthouseWriteReport> for LighthouseWriteReport {
+    fn from(report: crazyflie_lib::subsystems::memory::LighthouseWriteReport) -> Self {
+        Self { written: report.written, rejected: report.rejected }
+    }
+}
+
+/// Find and open the lighthouse memory
+async fn open_lighthouse_memory(
+    cf: &crazyflie_lib::Crazyflie,
+) -> PyResult<crazyflie_lib::subsystems::memory::LighthouseMemory> {
+    let memories = cf.memory.get_memories(Some(MemoryType::Lighthouse));
+    let mem_device = (*memories.first()
+        .ok_or_else(|| to_pyerr(crazyflie_lib::Error::MemoryError(
+            "No lighthouse memory found on Crazyflie".to_owned()
+        )))?)
+        .clone();
+
+    cf.memory.open_memory(mem_device).await
+        .ok_or_else(|| to_pyerr(crazyflie_lib::Error::MemoryError(
+            "Failed to open lighthouse memory".to_owned()
+        )))?
+        .map_err(to_pyerr)
+}
+
 /// Memory subsystem wrapper.
 ///
 /// Provides methods to upload trajectory data to the Crazyflie.
@@ -462,6 +747,126 @@ impl Memory {
             close_result?;
 
             Ok(())
+        })
+    }
+
+    /// Read lighthouse geometry data for all base stations.
+    ///
+    /// Opens the lighthouse memory, reads all slots the Crazyflie supports,
+    /// and closes the memory.
+    ///
+    /// Returns a dict mapping base station ID to LighthouseBsGeometry.
+    /// Only base stations with valid data are included.
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.dict[builtins.int, LighthouseBsGeometry]]"))]
+    fn read_lighthouse_geometries<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let lh_mem = open_lighthouse_memory(&cf).await?;
+
+            let read_result = lh_mem.read_all_geometries().await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(lh_mem).await.map_err(to_pyerr);
+
+            let geometries = read_result?;
+            close_result?;
+
+            Ok(geometries.iter()
+                .map(|(&bs_id, geo)| (bs_id, LighthouseBsGeometry::from(geo)))
+                .collect::<HashMap<_, _>>())
+        })
+    }
+
+    /// Read lighthouse calibration data for all base stations.
+    ///
+    /// Opens the lighthouse memory, reads all slots the Crazyflie supports,
+    /// and closes the memory.
+    ///
+    /// Returns a dict mapping base station ID to LighthouseBsCalibration.
+    /// Only base stations with valid data are included.
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.dict[builtins.int, LighthouseBsCalibration]]"))]
+    fn read_lighthouse_calibrations<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let lh_mem = open_lighthouse_memory(&cf).await?;
+
+            let read_result = lh_mem.read_all_calibrations().await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(lh_mem).await.map_err(to_pyerr);
+
+            let calibrations = read_result?;
+            close_result?;
+
+            Ok(calibrations.iter()
+                .map(|(&bs_id, calib)| (bs_id, LighthouseBsCalibration::from(calib)))
+                .collect::<HashMap<_, _>>())
+        })
+    }
+
+    /// Write lighthouse geometry data for several base stations.
+    ///
+    /// Opens the lighthouse memory, writes the slots in ascending order, and
+    /// closes the memory. Slots the Crazyflie does not support are skipped
+    /// and listed in the returned report. Any other error stops the write.
+    ///
+    /// The data is written to RAM only. Use
+    /// `Lighthouse.persist_lighthouse_data()` with `report.written` to store it.
+    ///
+    /// # Arguments
+    /// * `geometries` - Dict mapping base station ID (0-15) to LighthouseBsGeometry
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, LighthouseWriteReport]"))]
+    fn write_lighthouse_geometries<'py>(
+        &self,
+        py: Python<'py>,
+        geometries: HashMap<u8, LighthouseBsGeometry>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let rust_geometries = geometries.iter()
+                .map(|(&bs_id, geo)| (bs_id, geo.to_rust()))
+                .collect();
+
+            let lh_mem = open_lighthouse_memory(&cf).await?;
+
+            let write_result = lh_mem.write_geometries(&rust_geometries).await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(lh_mem).await.map_err(to_pyerr);
+
+            let report = write_result?;
+            close_result?;
+
+            Ok(LighthouseWriteReport::from(report))
+        })
+    }
+
+    /// Write lighthouse calibration data for several base stations.
+    ///
+    /// Opens the lighthouse memory, writes the slots in ascending order, and
+    /// closes the memory. Slots the Crazyflie does not support are skipped
+    /// and listed in the returned report. Any other error stops the write.
+    ///
+    /// The data is written to RAM only. Use
+    /// `Lighthouse.persist_lighthouse_data()` with `report.written` to store it.
+    ///
+    /// # Arguments
+    /// * `calibrations` - Dict mapping base station ID (0-15) to LighthouseBsCalibration
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, LighthouseWriteReport]"))]
+    fn write_lighthouse_calibrations<'py>(
+        &self,
+        py: Python<'py>,
+        calibrations: HashMap<u8, LighthouseBsCalibration>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let rust_calibrations = calibrations.iter()
+                .map(|(&bs_id, calib)| (bs_id, calib.to_rust()))
+                .collect();
+
+            let lh_mem = open_lighthouse_memory(&cf).await?;
+
+            let write_result = lh_mem.write_calibrations(&rust_calibrations).await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(lh_mem).await.map_err(to_pyerr);
+
+            let report = write_result?;
+            close_result?;
+
+            Ok(LighthouseWriteReport::from(report))
         })
     }
 
