@@ -37,7 +37,7 @@ use link_context::LinkContext;
 use subsystems::{
     Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, Platform, AppChannel,
     Localization, ExternalPose, Lighthouse, LocoPositioning,
-    LighthouseAngleData, LighthouseAngles,
+    LighthouseAngleData, LighthouseMatchedAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
     LighthouseBsGeometry, LighthouseBsCalibration, LighthouseCalibrationSweep, LighthouseWriteReport,
     Supervisor, SupervisorState,
@@ -64,6 +64,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Lighthouse>()?;
     m.add_class::<LocoPositioning>()?;
     m.add_class::<LighthouseAngleData>()?;
+    m.add_class::<LighthouseMatchedAngleData>()?;
     m.add_class::<LighthouseAngles>()?;
     m.add_class::<Memory>()?;
     m.add_class::<Poly>()?;

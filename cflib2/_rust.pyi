@@ -835,6 +835,29 @@ class Lighthouse:
         Returns:
             List of LighthouseAngleData (up to 100 with 10ms timeout)
         """
+    async def get_matched_angle_data(self) -> builtins.list[LighthouseMatchedAngleData]:
+        r"""
+        Get matched lighthouse angle measurements as they arrive
+
+        This function returns lighthouse angle data from the matched angle stream. It buffers
+        data internally and returns up to 100 angle measurements per call with a 10ms timeout
+        per measurement.
+
+        The matched angle stream sends groups of measurements from several base stations taken
+        at about the same time, which is what geometry estimation needs. Measurements in the
+        same group share a `group_id`, and `bs_count` tells how many belong to the group.
+
+        The stream is controlled by these parameters:
+        * `locSrv.enLhMtchStm` - number of groups to send (0 = off, 255 = continuous)
+        * `locSrv.minBsLhMtchStm` - minimum number of base stations in a group
+        * `locSrv.maxTimeLhMtchStm` - maximum time span of a group (ms)
+
+        The lib keeps track of angle data since the first call to this function, so later
+        calls return all measurements received since the previous call.
+
+        Returns:
+            List of LighthouseMatchedAngleData (up to 100 with 10ms timeout)
+        """
     async def persist_lighthouse_data(
         self,
         geo_list: typing.Sequence[builtins.int],
@@ -1074,6 +1097,32 @@ class LighthouseCalibrationSweep:
     ) -> LighthouseCalibrationSweep:
         r"""
         Create a new LighthouseCalibrationSweep. All values default to 0.0.
+        """
+
+@typing.final
+class LighthouseMatchedAngleData:
+    r"""
+    Lighthouse sweep angle data from the matched angle stream
+    """
+    @property
+    def base_station(self) -> builtins.int:
+        r"""
+        Base station ID
+        """
+    @property
+    def angles(self) -> LighthouseAngles:
+        r"""
+        Angle measurements
+        """
+    @property
+    def group_id(self) -> builtins.int:
+        r"""
+        Group ID (0-15, wraps around), shared by measurements taken at the same time
+        """
+    @property
+    def bs_count(self) -> builtins.int:
+        r"""
+        Number of base stations in the group
         """
 
 @typing.final
