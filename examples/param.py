@@ -45,7 +45,57 @@ class Args:
     """Crazyflie URI"""
 
 
+async def get_and_set_values(cf: Crazyflie, param_name: str) -> None:
+    param = cf.param()
+
+    # Get original value
+    print(f"\n1. Getting original value of '{param_name}'...")
+    original_value: int | float = await param.get(param_name)
+    print(f"   Original value: {original_value}V")
+
+    # Set new value
+    new_value: float = 3.8
+    print(f"\n2. Setting '{param_name}' to {new_value}V...")
+    await param.set(param_name, new_value)
+    print(f"   Set complete!")
+
+    # Get new value to confirm
+    print(f"\n3. Reading back '{param_name}'...")
+    current_value: int | float = await param.get(param_name)
+    print(f"   Current value: {current_value}V")
+
+    # Restore original value
+    print(f"\n4. Restoring '{param_name}' to original value ({original_value}V)...")
+    await param.set(param_name, float(original_value))
+    print(f"   Restored!")
+
+    # Get final value to confirm restoration
+    print(f"\n5. Verifying restoration of '{param_name}'...")
+    final_value: int | float = await param.get(param_name)
+    print(f"   Final value: {final_value}V")
+
+    if final_value == original_value:
+        print("\n✓ Parameter successfully restored to original value!")
+    else:
+        print(
+            f"\n⚠ Warning: Final value ({final_value}) differs from original ({original_value})"
+        )
+
+
+async def watch_param_changes(cf: Crazyflie) -> None:
+    param = cf.param()
+    param_change_stream = await param.watch_change()
+
+    async for name, value in param_change_stream:
+        print("--------------------")
+        print(f"Watched change: {name}: {value}")
+        print("--------------------")
+
+
 async def main() -> None:
+    # Test config
+    param_name = "pm.lowVoltage"
+
     args = tyro.cli(Args)
 
     print(f"Connecting to {args.uri}...")
@@ -53,45 +103,16 @@ async def main() -> None:
     cf = await Crazyflie.connect_from_uri(context, args.uri)
     print("Connected!")
 
-    param = cf.param()
-    param_name = "pm.lowVoltage"
-
     try:
-        # Get original value
-        print(f"\n1. Getting original value of '{param_name}'...")
-        original_value: int | float = await param.get(param_name)
-        print(f"   Original value: {original_value}V")
+        # Let watch changes run in the background
+        _ = asyncio.create_task(watch_param_changes(cf))
+        await get_and_set_values(cf, param_name)
 
-        # Set new value
-        new_value: float = 3.8
-        print(f"\n2. Setting '{param_name}' to {new_value}V...")
-        await param.set(param_name, new_value)
-        print(f"   Set complete!")
-
-        # Get new value to confirm
-        print(f"\n3. Reading back '{param_name}'...")
-        current_value: int | float = await param.get(param_name)
-        print(f"   Current value: {current_value}V")
-
-        # Restore original value
-        print(f"\n4. Restoring '{param_name}' to original value ({original_value}V)...")
-        await param.set(param_name, float(original_value))
-        print(f"   Restored!")
-
-        # Get final value to confirm restoration
-        print(f"\n5. Verifying restoration of '{param_name}'...")
-        final_value: int | float = await param.get(param_name)
-        print(f"   Final value: {final_value}V")
-
-        if final_value == original_value:
-            print("\n✓ Parameter successfully restored to original value!")
-        else:
-            print(
-                f"\n⚠ Warning: Final value ({final_value}) differs from original ({original_value})"
-            )
+    except Exception as e:
+        print(f"\nError: {e}")
 
     finally:
-        print("\nDisconnecting...")
+        print("Disconnect...")
         await cf.disconnect()
         print("Done!")
 
