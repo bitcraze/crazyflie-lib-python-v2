@@ -835,6 +835,29 @@ class Lighthouse:
         Returns:
             List of LighthouseAngleData (up to 100 with 10ms timeout)
         """
+    async def get_matched_angle_data(self) -> builtins.list[LighthouseMatchedAngleData]:
+        r"""
+        Get matched lighthouse angle measurements as they arrive
+
+        This function returns lighthouse angle data from the matched angle stream. It buffers
+        data internally and returns up to 100 angle measurements per call with a 10ms timeout
+        per measurement.
+
+        The matched angle stream sends groups of measurements from several base stations taken
+        at about the same time, which is what geometry estimation needs. Measurements in the
+        same group share a `group_id`, and `bs_count` tells how many belong to the group.
+
+        The stream is controlled by these parameters:
+        * `locSrv.enLhMtchStm` - number of groups to send (0 = off, 255 = continuous)
+        * `locSrv.minBsLhMtchStm` - minimum number of base stations in a group
+        * `locSrv.maxTimeLhMtchStm` - maximum time span of a group (ms)
+
+        The lib keeps track of angle data since the first call to this function, so later
+        calls return all measurements received since the previous call.
+
+        Returns:
+            List of LighthouseMatchedAngleData (up to 100 with 10ms timeout)
+        """
     async def persist_lighthouse_data(
         self,
         geo_list: typing.Sequence[builtins.int],
@@ -887,6 +910,328 @@ class LighthouseAngles:
     def y(self) -> builtins.list[builtins.float]:
         r"""
         Vertical angles for 4 sensors [rad]
+        """
+
+@typing.final
+class LighthouseBsCalibration:
+    r"""
+    Calibration data for one lighthouse base station.
+
+    `sweeps` returns copies, so to change a sweep, modify it and assign the
+    whole list back: `calib.sweeps = [sweep0, sweep1]`.
+    """
+    @property
+    def uid(self) -> builtins.int:
+        r"""
+        Base station UID
+        """
+    @uid.setter
+    def uid(self, value: builtins.int) -> None:
+        r"""
+        Base station UID
+        """
+    @property
+    def valid(self) -> builtins.bool:
+        r"""
+        Whether this calibration data is valid
+        """
+    @valid.setter
+    def valid(self, value: builtins.bool) -> None:
+        r"""
+        Whether this calibration data is valid
+        """
+    @property
+    def sweeps(self) -> builtins.list[LighthouseCalibrationSweep]:
+        r"""
+        Calibration for the 2 sweeps (list of 2 LighthouseCalibrationSweep)
+        """
+    @sweeps.setter
+    def sweeps(self, value: builtins.list[LighthouseCalibrationSweep]) -> None: ...
+    def __new__(
+        cls,
+        sweeps: typing.Optional[typing.Sequence[LighthouseCalibrationSweep]] = None,
+        uid: builtins.int = 0,
+        valid: builtins.bool = False,
+    ) -> LighthouseBsCalibration:
+        r"""
+        Create a new LighthouseBsCalibration.
+
+        # Arguments
+        * `sweeps` - List of exactly 2 LighthouseCalibrationSweep (default: two zeroed sweeps)
+        * `uid` - Base station UID (default 0)
+        * `valid` - Whether the data is valid (default False)
+        """
+
+@typing.final
+class LighthouseBsGeometry:
+    r"""
+    Geometry data (position and orientation) for one lighthouse base station.
+    """
+    @property
+    def valid(self) -> builtins.bool:
+        r"""
+        Whether this geometry data is valid
+        """
+    @valid.setter
+    def valid(self, value: builtins.bool) -> None:
+        r"""
+        Whether this geometry data is valid
+        """
+    @property
+    def origin(self) -> builtins.list[builtins.float]:
+        r"""
+        Position of the base station [x, y, z] in meters
+        """
+    @origin.setter
+    def origin(self, value: builtins.list[builtins.float]) -> None: ...
+    @property
+    def rotation_matrix(self) -> builtins.list[builtins.list[builtins.float]]:
+        r"""
+        Rotation matrix of the base station, as a list of 3 rows with 3 values each
+        """
+    @rotation_matrix.setter
+    def rotation_matrix(
+        self, value: builtins.list[builtins.list[builtins.float]]
+    ) -> None: ...
+    def __new__(
+        cls,
+        origin: typing.Optional[typing.Sequence[builtins.float]] = None,
+        rotation_matrix: typing.Optional[
+            typing.Sequence[typing.Sequence[builtins.float]]
+        ] = None,
+        valid: builtins.bool = False,
+    ) -> LighthouseBsGeometry:
+        r"""
+        Create a new LighthouseBsGeometry.
+
+        # Arguments
+        * `origin` - Position [x, y, z] in meters (default all zeros)
+        * `rotation_matrix` - 3x3 rotation matrix as a list of 3 rows (default all zeros)
+        * `valid` - Whether the data is valid (default False)
+        """
+
+@typing.final
+class LighthouseCalibrationSweep:
+    r"""
+    Calibration data for one sweep of a lighthouse base station.
+    """
+    @property
+    def phase(self) -> builtins.float:
+        r"""
+        Phase offset
+        """
+    @phase.setter
+    def phase(self, value: builtins.float) -> None:
+        r"""
+        Phase offset
+        """
+    @property
+    def tilt(self) -> builtins.float:
+        r"""
+        Tilt angle
+        """
+    @tilt.setter
+    def tilt(self, value: builtins.float) -> None:
+        r"""
+        Tilt angle
+        """
+    @property
+    def curve(self) -> builtins.float:
+        r"""
+        Curve compensation
+        """
+    @curve.setter
+    def curve(self, value: builtins.float) -> None:
+        r"""
+        Curve compensation
+        """
+    @property
+    def gibmag(self) -> builtins.float:
+        r"""
+        Gibbs magnitude
+        """
+    @gibmag.setter
+    def gibmag(self, value: builtins.float) -> None:
+        r"""
+        Gibbs magnitude
+        """
+    @property
+    def gibphase(self) -> builtins.float:
+        r"""
+        Gibbs phase
+        """
+    @gibphase.setter
+    def gibphase(self, value: builtins.float) -> None:
+        r"""
+        Gibbs phase
+        """
+    @property
+    def ogeemag(self) -> builtins.float:
+        r"""
+        OGEE magnitude
+        """
+    @ogeemag.setter
+    def ogeemag(self, value: builtins.float) -> None:
+        r"""
+        OGEE magnitude
+        """
+    @property
+    def ogeephase(self) -> builtins.float:
+        r"""
+        OGEE phase
+        """
+    @ogeephase.setter
+    def ogeephase(self, value: builtins.float) -> None:
+        r"""
+        OGEE phase
+        """
+    def __new__(
+        cls,
+        phase: builtins.float = 0.0,
+        tilt: builtins.float = 0.0,
+        curve: builtins.float = 0.0,
+        gibmag: builtins.float = 0.0,
+        gibphase: builtins.float = 0.0,
+        ogeemag: builtins.float = 0.0,
+        ogeephase: builtins.float = 0.0,
+    ) -> LighthouseCalibrationSweep:
+        r"""
+        Create a new LighthouseCalibrationSweep. All values default to 0.0.
+        """
+
+@typing.final
+class LighthouseConfig:
+    r"""
+    A lighthouse system configuration, as stored in a configuration file.
+
+    Use `LighthouseConfig.from_yaml()` to load a file and `to_yaml()` to save one.
+    The geometries and calibrations can be written to the Crazyflie with
+    `Memory.write_lighthouse_geometries()` and `Memory.write_lighthouse_calibrations()`.
+
+    `geometries` and `calibrations` return copies, so to change them, modify the
+    dict and assign it back: `config.geometries = geos`.
+    """
+    @property
+    def system_type(self) -> builtins.int:
+        r"""
+        Lighthouse system type (1 = Lighthouse V1, 2 = Lighthouse V2)
+        """
+    @system_type.setter
+    def system_type(self, value: builtins.int) -> None:
+        r"""
+        Lighthouse system type (1 = Lighthouse V1, 2 = Lighthouse V2)
+        """
+    @property
+    def geometries(self) -> builtins.dict[builtins.int, LighthouseBsGeometry]:
+        r"""
+        Geometry data, mapping base station ID to LighthouseBsGeometry
+        """
+    @geometries.setter
+    def geometries(
+        self, value: builtins.dict[builtins.int, LighthouseBsGeometry]
+    ) -> None:
+        r"""
+        Geometry data, mapping base station ID to LighthouseBsGeometry
+        """
+    @property
+    def calibrations(self) -> builtins.dict[builtins.int, LighthouseBsCalibration]:
+        r"""
+        Calibration data, mapping base station ID to LighthouseBsCalibration
+        """
+    @calibrations.setter
+    def calibrations(
+        self, value: builtins.dict[builtins.int, LighthouseBsCalibration]
+    ) -> None:
+        r"""
+        Calibration data, mapping base station ID to LighthouseBsCalibration
+        """
+    def __new__(
+        cls,
+        system_type: builtins.int = 2,
+        geometries: typing.Optional[
+            typing.Mapping[builtins.int, LighthouseBsGeometry]
+        ] = None,
+        calibrations: typing.Optional[
+            typing.Mapping[builtins.int, LighthouseBsCalibration]
+        ] = None,
+    ) -> LighthouseConfig:
+        r"""
+        Create a new LighthouseConfig.
+
+        # Arguments
+        * `system_type` - Lighthouse system type, 1 or 2 (default 2)
+        * `geometries` - Dict mapping base station ID to LighthouseBsGeometry (default empty)
+        * `calibrations` - Dict mapping base station ID to LighthouseBsCalibration (default empty)
+        """
+    @staticmethod
+    def from_yaml(yaml: builtins.str) -> LighthouseConfig:
+        r"""
+        Parse a lighthouse configuration from YAML.
+
+        The file must have `type: lighthouse_system_configuration` and `version: '1'`.
+        `systemType` defaults to 2 if missing, and `geos` and `calibs` default to empty.
+        All geometries and calibrations in the file are marked valid.
+
+        Raises `InvalidArgumentError` if the YAML can not be parsed, if the file type or
+        version is missing or not supported, if the system type is not 1 or 2, or if a
+        base station ID is out of range (0-15).
+
+        # Arguments
+        * `yaml` - The YAML content of the configuration file
+        """
+    def to_yaml(self) -> builtins.str:
+        r"""
+        Serialize the configuration to YAML.
+
+        Base stations are written in ascending ID order. Geometries and calibrations
+        that are not valid are left out, since the file format has no valid flag.
+        """
+
+@typing.final
+class LighthouseMatchedAngleData:
+    r"""
+    Lighthouse sweep angle data from the matched angle stream
+    """
+    @property
+    def base_station(self) -> builtins.int:
+        r"""
+        Base station ID
+        """
+    @property
+    def angles(self) -> LighthouseAngles:
+        r"""
+        Angle measurements
+        """
+    @property
+    def group_id(self) -> builtins.int:
+        r"""
+        Group ID (0-15, wraps around), shared by measurements taken at the same time
+        """
+    @property
+    def bs_count(self) -> builtins.int:
+        r"""
+        Number of base stations in the group
+        """
+
+@typing.final
+class LighthouseWriteReport:
+    r"""
+    Result of writing several lighthouse base station slots.
+
+    Returned by `Memory.write_lighthouse_geometries()` and
+    `Memory.write_lighthouse_calibrations()`. Use `written` to decide which
+    slots to persist with `Lighthouse.persist_lighthouse_data()`.
+    """
+    @property
+    def written(self) -> builtins.list[builtins.int]:
+        r"""
+        Base station IDs that were written, in ascending order
+        """
+    @property
+    def rejected(self) -> builtins.list[builtins.int]:
+        r"""
+        Base station IDs the Crazyflie rejected because it does not support
+        that many base stations, in ascending order
         """
 
 @typing.final
@@ -1176,6 +1521,62 @@ class Memory:
 
         # Arguments
         * `leds` - List of exactly 12 LedRingColor instances
+        """
+    async def read_lighthouse_geometries(
+        self,
+    ) -> builtins.dict[builtins.int, LighthouseBsGeometry]:
+        r"""
+        Read lighthouse geometry data for all base stations.
+
+        Opens the lighthouse memory, reads all slots the Crazyflie supports,
+        and closes the memory.
+
+        Returns a dict mapping base station ID to LighthouseBsGeometry.
+        Only base stations with valid data are included.
+        """
+    async def read_lighthouse_calibrations(
+        self,
+    ) -> builtins.dict[builtins.int, LighthouseBsCalibration]:
+        r"""
+        Read lighthouse calibration data for all base stations.
+
+        Opens the lighthouse memory, reads all slots the Crazyflie supports,
+        and closes the memory.
+
+        Returns a dict mapping base station ID to LighthouseBsCalibration.
+        Only base stations with valid data are included.
+        """
+    async def write_lighthouse_geometries(
+        self, geometries: typing.Mapping[builtins.int, LighthouseBsGeometry]
+    ) -> LighthouseWriteReport:
+        r"""
+        Write lighthouse geometry data for several base stations.
+
+        Opens the lighthouse memory, writes the slots in ascending order, and
+        closes the memory. Slots the Crazyflie does not support are skipped
+        and listed in the returned report. Any other error stops the write.
+
+        The data is written to RAM only. Use
+        `Lighthouse.persist_lighthouse_data()` with `report.written` to store it.
+
+        # Arguments
+        * `geometries` - Dict mapping base station ID (0-15) to LighthouseBsGeometry
+        """
+    async def write_lighthouse_calibrations(
+        self, calibrations: typing.Mapping[builtins.int, LighthouseBsCalibration]
+    ) -> LighthouseWriteReport:
+        r"""
+        Write lighthouse calibration data for several base stations.
+
+        Opens the lighthouse memory, writes the slots in ascending order, and
+        closes the memory. Slots the Crazyflie does not support are skipped
+        and listed in the returned report. Any other error stops the write.
+
+        The data is written to RAM only. Use
+        `Lighthouse.persist_lighthouse_data()` with `report.written` to store it.
+
+        # Arguments
+        * `calibrations` - Dict mapping base station ID (0-15) to LighthouseBsCalibration
         """
     def get_memories(
         self, memory_type: typing.Optional[builtins.int] = None

@@ -37,8 +37,10 @@ use link_context::LinkContext;
 use subsystems::{
     Commander, Console, Log, LogBlock, LogData, LogStream, Param, PersistentParamState, Platform, AppChannel,
     Localization, ExternalPose, Lighthouse, LocoPositioning,
-    LighthouseAngleData, LighthouseAngles,
+    LighthouseAngleData, LighthouseMatchedAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
+    LighthouseBsGeometry, LighthouseBsCalibration, LighthouseCalibrationSweep, LighthouseWriteReport,
+    LighthouseConfig,
     Supervisor, SupervisorState,
 };
 use toc_cache::{NoTocCache, InMemoryTocCache, FileTocCache};
@@ -63,6 +65,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Lighthouse>()?;
     m.add_class::<LocoPositioning>()?;
     m.add_class::<LighthouseAngleData>()?;
+    m.add_class::<LighthouseMatchedAngleData>()?;
     m.add_class::<LighthouseAngles>()?;
     m.add_class::<Memory>()?;
     m.add_class::<Poly>()?;
@@ -70,6 +73,11 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CompressedStart>()?;
     m.add_class::<CompressedSegment>()?;
     m.add_class::<LedRingColor>()?;
+    m.add_class::<LighthouseBsGeometry>()?;
+    m.add_class::<LighthouseBsCalibration>()?;
+    m.add_class::<LighthouseCalibrationSweep>()?;
+    m.add_class::<LighthouseWriteReport>()?;
+    m.add_class::<LighthouseConfig>()?;
     m.add_class::<Supervisor>()?;
     m.add_class::<SupervisorState>()?;
     m.add_class::<NoTocCache>()?;

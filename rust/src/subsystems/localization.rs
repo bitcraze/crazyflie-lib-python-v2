@@ -28,6 +28,7 @@ use futures::stream::Stream;
 use std::pin::Pin;
 
 type AngleStream = Pin<Box<dyn Stream<Item = crazyflie_lib::subsystems::localization::LighthouseAngleData> + Send>>;
+type MatchedAngleStream = Pin<Box<dyn Stream<Item = crazyflie_lib::subsystems::localization::LighthouseMatchedAngleData> + Send>>;
 
 /// Localization subsystem wrapper
 #[gen_stub_pyclass]
@@ -138,6 +139,7 @@ impl ExternalPose {
 pub struct Lighthouse {
     cf: Arc<crazyflie_lib::Crazyflie>,
     stream: Arc<tokio::sync::Mutex<Option<AngleStream>>>,
+    matched_stream: Arc<tokio::sync::Mutex<Option<MatchedAngleStream>>>,
 }
 
 impl Lighthouse {
@@ -145,6 +147,7 @@ impl Lighthouse {
         Lighthouse {
             cf,
             stream: Arc::new(tokio::sync::Mutex::new(None)),
+            matched_stream: Arc::new(tokio::sync::Mutex::new(None)),
         }
     }
 }
@@ -195,6 +198,61 @@ impl Lighthouse {
                     break;
                 }
             }
+            Ok(angle_data_list)
+        })
+    }
+
+    /// Get matched lighthouse angle measurements as they arrive
+    ///
+    /// This function returns lighthouse angle data from the matched angle stream. It buffers
+    /// data internally and returns up to 100 angle measurements per call with a 10ms timeout
+    /// per measurement.
+    ///
+    /// The matched angle stream sends groups of measurements from several base stations taken
+    /// at about the same time, which is what geometry estimation needs. Measurements in the
+    /// same group share a `group_id`, and `bs_count` tells how many belong to the group.
+    ///
+    /// The stream is controlled by these parameters:
+    /// * `locSrv.enLhMtchStm` - number of groups to send (0 = off, 255 = continuous)
+    /// * `locSrv.minBsLhMtchStm` - minimum number of base stations in a group
+    /// * `locSrv.maxTimeLhMtchStm` - maximum time span of a group (ms)
+    ///
+    /// The lib keeps track of angle data since the first call to this function, so later
+    /// calls return all measurements received since the previous call.
+    ///
+    /// Returns:
+    ///     List of LighthouseMatchedAngleData (up to 100 with 10ms timeout)
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, builtins.list[LighthouseMatchedAngleData]]"))]
+    fn get_matched_angle_data<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        let stream = self.matched_stream.clone();
+
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            use futures::StreamExt;
+
+            let mut stream_guard = stream.lock().await;
+
+            // Initialize stream if not already created
+            if stream_guard.is_none() {
+                let new_stream = cf.localization.lighthouse.matched_angle_stream().await;
+                *stream_guard = Some(Box::pin(new_stream));
+            }
+
+            let stream_ref = stream_guard.as_mut().unwrap();
+            let mut angle_data_list = Vec::new();
+
+            // Get up to 100 angle measurements or timeout
+            for _ in 0..100 {
+                if let Ok(Some(angle_data)) = tokio::time::timeout(
+                    std::time::Duration::from_millis(10),
+                    stream_ref.next()
+                ).await {
+                    angle_data_list.push(LighthouseMatchedAngleData::from(angle_data));
+                } else {
+                    break;
+                }
+            }
+
             Ok(angle_data_list)
         })
     }
@@ -254,6 +312,56 @@ impl LighthouseAngleData {
     #[getter]
     fn angles(&self) -> LighthouseAngles {
         self.angles.clone()
+    }
+}
+
+/// Lighthouse sweep angle data from the matched angle stream
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone)]
+pub struct LighthouseMatchedAngleData {
+    base_station: u8,
+    angles: LighthouseAngles,
+    group_id: u8,
+    bs_count: u8,
+}
+
+impl From<crazyflie_lib::subsystems::localization::LighthouseMatchedAngleData> for LighthouseMatchedAngleData {
+    fn from(data: crazyflie_lib::subsystems::localization::LighthouseMatchedAngleData) -> Self {
+        LighthouseMatchedAngleData {
+            base_station: data.base_station,
+            angles: LighthouseAngles::from(data.angles),
+            group_id: data.group_id,
+            bs_count: data.bs_count,
+        }
+    }
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LighthouseMatchedAngleData {
+    /// Base station ID
+    #[getter]
+    fn base_station(&self) -> u8 {
+        self.base_station
+    }
+
+    /// Angle measurements
+    #[getter]
+    fn angles(&self) -> LighthouseAngles {
+        self.angles.clone()
+    }
+
+    /// Group ID (0-15, wraps around), shared by measurements taken at the same time
+    #[getter]
+    fn group_id(&self) -> u8 {
+        self.group_id
+    }
+
+    /// Number of base stations in the group
+    #[getter]
+    fn bs_count(&self) -> u8 {
+        self.bs_count
     }
 }
 

@@ -34,9 +34,13 @@ mod supervisor;
 pub use commander::Commander;
 pub use console::Console;
 pub use high_level_commander::HighLevelCommander;
-pub use localization::{Localization, ExternalPose, Lighthouse, LocoPositioning, LighthouseAngleData, LighthouseAngles};
+pub use localization::{Localization, ExternalPose, Lighthouse, LighthouseAngleData, LighthouseMatchedAngleData, LighthouseAngles, LocoPositioning};
 pub use log::{Log, LogBlock, LogData, LogStream};
-pub use memory::{Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor};
+pub use memory::{
+    Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
+    LighthouseBsGeometry, LighthouseBsCalibration, LighthouseCalibrationSweep, LighthouseWriteReport,
+    LighthouseConfig,
+};
 pub use param::{Param, PersistentParamState};
 pub use platform::{Platform, AppChannel};
 pub use supervisor::{Supervisor, SupervisorState};
