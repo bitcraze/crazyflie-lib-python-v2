@@ -39,6 +39,7 @@ pub use log::{Log, LogBlock, LogData, LogStream};
 pub use memory::{
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
     LighthouseBsGeometry, LighthouseBsCalibration, LighthouseCalibrationSweep, LighthouseWriteReport,
+    LighthouseConfig,
 };
 pub use param::{Param, PersistentParamState};
 pub use platform::{Platform, AppChannel};

@@ -40,6 +40,7 @@ use subsystems::{
     LighthouseAngleData, LighthouseMatchedAngleData, LighthouseAngles,
     Memory, Poly, Poly4D, CompressedStart, CompressedSegment, LedRingColor,
     LighthouseBsGeometry, LighthouseBsCalibration, LighthouseCalibrationSweep, LighthouseWriteReport,
+    LighthouseConfig,
     Supervisor, SupervisorState,
 };
 use toc_cache::{NoTocCache, InMemoryTocCache, FileTocCache};
@@ -76,6 +77,7 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<LighthouseBsCalibration>()?;
     m.add_class::<LighthouseCalibrationSweep>()?;
     m.add_class::<LighthouseWriteReport>()?;
+    m.add_class::<LighthouseConfig>()?;
     m.add_class::<Supervisor>()?;
     m.add_class::<SupervisorState>()?;
     m.add_class::<NoTocCache>()?;

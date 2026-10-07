@@ -27,7 +27,8 @@
 //! via the [`Memory`] subsystem. LED ring colors are set using
 //! [`LedRingColor`] and written via [`Memory::write_led_ring`].
 //! Lighthouse base station configuration is read and written as
-//! [`LighthouseBsGeometry`] and [`LighthouseBsCalibration`].
+//! [`LighthouseBsGeometry`] and [`LighthouseBsCalibration`], and loaded from
+//! or saved to a configuration file with [`LighthouseConfig`].
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
@@ -559,6 +560,108 @@ pub struct LighthouseWriteReport {
 impl From<crazyflie_lib::subsystems::memory::LighthouseWriteReport> for LighthouseWriteReport {
     fn from(report: crazyflie_lib::subsystems::memory::LighthouseWriteReport) -> Self {
         Self { written: report.written, rejected: report.rejected }
+    }
+}
+
+/// A lighthouse system configuration, as stored in a configuration file.
+///
+/// Use `LighthouseConfig.from_yaml()` to load a file and `to_yaml()` to save one.
+/// The geometries and calibrations can be written to the Crazyflie with
+/// `Memory.write_lighthouse_geometries()` and `Memory.write_lighthouse_calibrations()`.
+///
+/// `geometries` and `calibrations` return copies, so to change them, modify the
+/// dict and assign it back: `config.geometries = geos`.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LighthouseConfig {
+    /// Lighthouse system type (1 = Lighthouse V1, 2 = Lighthouse V2)
+    #[pyo3(get, set)]
+    system_type: u8,
+    /// Geometry data, mapping base station ID to LighthouseBsGeometry
+    #[pyo3(get, set)]
+    geometries: HashMap<u8, LighthouseBsGeometry>,
+    /// Calibration data, mapping base station ID to LighthouseBsCalibration
+    #[pyo3(get, set)]
+    calibrations: HashMap<u8, LighthouseBsCalibration>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LighthouseConfig {
+    /// Create a new LighthouseConfig.
+    ///
+    /// # Arguments
+    /// * `system_type` - Lighthouse system type, 1 or 2 (default 2)
+    /// * `geometries` - Dict mapping base station ID to LighthouseBsGeometry (default empty)
+    /// * `calibrations` - Dict mapping base station ID to LighthouseBsCalibration (default empty)
+    #[new]
+    #[pyo3(signature = (system_type=2, geometries=None, calibrations=None))]
+    fn new(
+        system_type: u8,
+        geometries: Option<HashMap<u8, LighthouseBsGeometry>>,
+        calibrations: Option<HashMap<u8, LighthouseBsCalibration>>,
+    ) -> Self {
+        Self {
+            system_type,
+            geometries: geometries.unwrap_or_default(),
+            calibrations: calibrations.unwrap_or_default(),
+        }
+    }
+
+    /// Parse a lighthouse configuration from YAML.
+    ///
+    /// The file must have `type: lighthouse_system_configuration` and `version: '1'`.
+    /// `systemType` defaults to 2 if missing, and `geos` and `calibs` default to empty.
+    /// All geometries and calibrations in the file are marked valid.
+    ///
+    /// Raises `InvalidArgumentError` if the YAML can not be parsed, if the file type or
+    /// version is missing or not supported, if the system type is not 1 or 2, or if a
+    /// base station ID is out of range (0-15).
+    ///
+    /// # Arguments
+    /// * `yaml` - The YAML content of the configuration file
+    #[staticmethod]
+    fn from_yaml(yaml: &str) -> PyResult<Self> {
+        let config = crazyflie_lib::subsystems::memory::LighthouseConfig::from_yaml(yaml)
+            .map_err(to_pyerr)?;
+        Ok(Self::from(&config))
+    }
+
+    /// Serialize the configuration to YAML.
+    ///
+    /// Base stations are written in ascending ID order. Geometries and calibrations
+    /// that are not valid are left out, since the file format has no valid flag.
+    fn to_yaml(&self) -> PyResult<String> {
+        self.to_rust().to_yaml().map_err(to_pyerr)
+    }
+}
+
+impl LighthouseConfig {
+    fn to_rust(&self) -> crazyflie_lib::subsystems::memory::LighthouseConfig {
+        crazyflie_lib::subsystems::memory::LighthouseConfig {
+            system_type: self.system_type,
+            geometries: self.geometries.iter()
+                .map(|(&bs_id, geo)| (bs_id, geo.to_rust()))
+                .collect(),
+            calibrations: self.calibrations.iter()
+                .map(|(&bs_id, calib)| (bs_id, calib.to_rust()))
+                .collect(),
+        }
+    }
+}
+
+impl From<&crazyflie_lib::subsystems::memory::LighthouseConfig> for LighthouseConfig {
+    fn from(config: &crazyflie_lib::subsystems::memory::LighthouseConfig) -> Self {
+        Self {
+            system_type: config.system_type,
+            geometries: config.geometries.iter()
+                .map(|(&bs_id, geo)| (bs_id, LighthouseBsGeometry::from(geo)))
+                .collect(),
+            calibrations: config.calibrations.iter()
+                .map(|(&bs_id, calib)| (bs_id, LighthouseBsCalibration::from(calib)))
+                .collect(),
+        }
     }
 }
 

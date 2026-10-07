@@ -1100,6 +1100,94 @@ class LighthouseCalibrationSweep:
         """
 
 @typing.final
+class LighthouseConfig:
+    r"""
+    A lighthouse system configuration, as stored in a configuration file.
+
+    Use `LighthouseConfig.from_yaml()` to load a file and `to_yaml()` to save one.
+    The geometries and calibrations can be written to the Crazyflie with
+    `Memory.write_lighthouse_geometries()` and `Memory.write_lighthouse_calibrations()`.
+
+    `geometries` and `calibrations` return copies, so to change them, modify the
+    dict and assign it back: `config.geometries = geos`.
+    """
+    @property
+    def system_type(self) -> builtins.int:
+        r"""
+        Lighthouse system type (1 = Lighthouse V1, 2 = Lighthouse V2)
+        """
+    @system_type.setter
+    def system_type(self, value: builtins.int) -> None:
+        r"""
+        Lighthouse system type (1 = Lighthouse V1, 2 = Lighthouse V2)
+        """
+    @property
+    def geometries(self) -> builtins.dict[builtins.int, LighthouseBsGeometry]:
+        r"""
+        Geometry data, mapping base station ID to LighthouseBsGeometry
+        """
+    @geometries.setter
+    def geometries(
+        self, value: builtins.dict[builtins.int, LighthouseBsGeometry]
+    ) -> None:
+        r"""
+        Geometry data, mapping base station ID to LighthouseBsGeometry
+        """
+    @property
+    def calibrations(self) -> builtins.dict[builtins.int, LighthouseBsCalibration]:
+        r"""
+        Calibration data, mapping base station ID to LighthouseBsCalibration
+        """
+    @calibrations.setter
+    def calibrations(
+        self, value: builtins.dict[builtins.int, LighthouseBsCalibration]
+    ) -> None:
+        r"""
+        Calibration data, mapping base station ID to LighthouseBsCalibration
+        """
+    def __new__(
+        cls,
+        system_type: builtins.int = 2,
+        geometries: typing.Optional[
+            typing.Mapping[builtins.int, LighthouseBsGeometry]
+        ] = None,
+        calibrations: typing.Optional[
+            typing.Mapping[builtins.int, LighthouseBsCalibration]
+        ] = None,
+    ) -> LighthouseConfig:
+        r"""
+        Create a new LighthouseConfig.
+
+        # Arguments
+        * `system_type` - Lighthouse system type, 1 or 2 (default 2)
+        * `geometries` - Dict mapping base station ID to LighthouseBsGeometry (default empty)
+        * `calibrations` - Dict mapping base station ID to LighthouseBsCalibration (default empty)
+        """
+    @staticmethod
+    def from_yaml(yaml: builtins.str) -> LighthouseConfig:
+        r"""
+        Parse a lighthouse configuration from YAML.
+
+        The file must have `type: lighthouse_system_configuration` and `version: '1'`.
+        `systemType` defaults to 2 if missing, and `geos` and `calibs` default to empty.
+        All geometries and calibrations in the file are marked valid.
+
+        Raises `InvalidArgumentError` if the YAML can not be parsed, if the file type or
+        version is missing or not supported, if the system type is not 1 or 2, or if a
+        base station ID is out of range (0-15).
+
+        # Arguments
+        * `yaml` - The YAML content of the configuration file
+        """
+    def to_yaml(self) -> builtins.str:
+        r"""
+        Serialize the configuration to YAML.
+
+        Base stations are written in ascending ID order. Geometries and calibrations
+        that are not valid are left out, since the file format has no valid flag.
+        """
+
+@typing.final
 class LighthouseMatchedAngleData:
     r"""
     Lighthouse sweep angle data from the matched angle stream

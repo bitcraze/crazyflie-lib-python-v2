@@ -30,7 +30,6 @@ The YAML file uses the same format as the cfclient, cflib and cfcli.
 
 REQUIREMENTS:
 - Crazyflie with Lighthouse deck
-- pyyaml (included in the dev dependencies)
 
 Example usage:
     python lighthouse_config.py                              # Read and print the configuration
@@ -43,19 +42,16 @@ from dataclasses import dataclass
 from typing import Any
 
 import tyro
-import yaml
 
 from cflib2 import Crazyflie, LinkContext
 from cflib2.memory import (
     LighthouseBsCalibration,
     LighthouseBsGeometry,
-    LighthouseCalibrationSweep,
+    LighthouseConfig,
     LighthouseWriteReport,
 )
 
 MAX_BASE_STATIONS = 16
-
-SWEEP_FIELDS = ["curve", "gibmag", "gibphase", "ogeemag", "ogeephase", "phase", "tilt"]
 
 
 @dataclass
@@ -74,40 +70,21 @@ async def read_config(cf: Crazyflie) -> None:
     geometries = await memory.read_lighthouse_geometries()
     print("Reading calibrations...")
     calibrations = await memory.read_lighthouse_calibrations()
-    system_type = await cf.param().get("lighthouse.systemType")
+    system_type = int(await cf.param().get("lighthouse.systemType"))
 
-    config = {
-        "calibs": {
-            bs_id: {
-                "sweeps": [
-                    {name: getattr(sweep, name) for name in SWEEP_FIELDS}
-                    for sweep in calib.sweeps
-                ],
-                "uid": calib.uid,
-            }
-            for bs_id, calib in sorted(calibrations.items())
-        },
-        "geos": {
-            bs_id: {"origin": geo.origin, "rotation": geo.rotation_matrix}
-            for bs_id, geo in sorted(geometries.items())
-        },
-        "systemType": system_type,
-        "type": "lighthouse_system_configuration",
-        "version": "1",
-    }
+    config = LighthouseConfig(system_type, geometries, calibrations)
 
     print()
-    print(yaml.dump(config))
+    print(config.to_yaml())
 
 
 async def write_config(cf: Crazyflie, path: str) -> None:
     """Load a YAML file and write the configuration to the Crazyflie"""
+    # Checks the file type, version, system type and base station IDs, so an
+    # invalid file fails here, before anything is written to the Crazyflie
     with open(path) as f:
-        config: dict[str, Any] = yaml.safe_load(f)
+        config = LighthouseConfig.from_yaml(f.read())
     print(f"\nLoaded {path}")
-
-    file_geos: dict[int, Any] = config.get("geos", {})
-    file_calibs: dict[int, Any] = config.get("calibs", {})
 
     # Start with empty (invalid) data in all 16 slots, so base stations that are
     # not in the file are cleared on the Crazyflie. Slots above what the
@@ -116,19 +93,18 @@ async def write_config(cf: Crazyflie, path: str) -> None:
     calibrations = {
         bs_id: LighthouseBsCalibration() for bs_id in range(MAX_BASE_STATIONS)
     }
+    file_geos = config.geometries
+    file_calibs = config.calibrations
+    geometries.update(file_geos)
+    calibrations.update(file_calibs)
 
-    for bs_id, geo in file_geos.items():
-        geometries[bs_id] = LighthouseBsGeometry(
-            origin=geo["origin"], rotation_matrix=geo["rotation"], valid=True
-        )
-    for bs_id, calib in file_calibs.items():
-        sweeps = [
-            LighthouseCalibrationSweep(**{name: sweep[name] for name in SWEEP_FIELDS})
-            for sweep in calib["sweeps"]
-        ]
-        calibrations[bs_id] = LighthouseBsCalibration(
-            sweeps=sweeps, uid=calib["uid"], valid=True
-        )
+    # Set the system type first: changing it clears the geometry and calibration
+    # data in the Crazyflie's RAM when base stations are visible. The switch can
+    # take up to 0.5 s and setting the parameter gives no signal when it is done,
+    # so wait before writing.
+    print(f"Setting system type to {config.system_type}...")
+    await cf.param().set("lighthouse.systemType", config.system_type)
+    await asyncio.sleep(0.8)
 
     memory = cf.memory()
 
@@ -140,10 +116,6 @@ async def write_config(cf: Crazyflie, path: str) -> None:
     calib_report = await memory.write_lighthouse_calibrations(calibrations)
     print_report(calib_report, file_calibs)
 
-    system_type = config["systemType"]
-    print(f"Setting system type to {system_type}...")
-    await cf.param().set("lighthouse.systemType", system_type)
-
     # Only the written slots are persisted
     print("Persisting data...")
     persisted = (
@@ -154,10 +126,10 @@ async def write_config(cf: Crazyflie, path: str) -> None:
         )
     )
 
-    if persisted:
-        print("✓ Configuration written and persisted!")
-    else:
-        print("✗ Persistence failed!")
+    if not persisted:
+        raise RuntimeError("Persisting the configuration failed")
+
+    print("✓ Configuration written and persisted!")
 
 
 def print_report(report: LighthouseWriteReport, from_file: dict[int, Any]) -> None:
