@@ -12,6 +12,7 @@
 import asyncio
 from cflib2 import Crazyflie, LinkContext
 
+
 async def main():
     context = LinkContext()
 
@@ -25,6 +26,7 @@ async def main():
     value = await param.get("pm.lowVoltage")
     print(f"Low voltage threshold: {value}V")
     await cf.disconnect()
+
 
 asyncio.run(main())
 ```
