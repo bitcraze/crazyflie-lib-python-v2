@@ -93,22 +93,20 @@ impl Crazyflie {
         toc_cache: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         // Extract cache from Python object
-        let cache = if let Some(cache_obj) = toc_cache {
-            // Try to extract each cache type
-            if let Ok(no_cache) = cache_obj.extract::<NoTocCache>() {
-                AnyCacheWrapper::NoCache(no_cache)
-            } else if let Ok(mem_cache) = cache_obj.extract::<InMemoryTocCache>() {
-                AnyCacheWrapper::InMemory(mem_cache)
-            } else if let Ok(file_cache) = cache_obj.extract::<FileTocCache>() {
-                AnyCacheWrapper::File(file_cache)
-            } else {
-                return Err(PyRuntimeError::new_err(
-                    "toc_cache must be NoTocCache, InMemoryTocCache, or FileTocCache"
-                ));
-            }
-        } else {
-            // Default to NoTocCache
-            AnyCacheWrapper::NoCache(NoTocCache)
+        let cache = match toc_cache {
+            Some(cache_obj) => match cache_obj.extract::<NoTocCache>() {
+                Ok(no_cache) => AnyCacheWrapper::NoCache(no_cache),
+                _ => match cache_obj.extract::<InMemoryTocCache>() {
+                    Ok(mem_cache) => AnyCacheWrapper::InMemory(mem_cache),
+                    _ => match cache_obj.extract::<FileTocCache>() {
+                        Ok(file_cache) => AnyCacheWrapper::File(file_cache),
+                        _ => return Err(PyRuntimeError::new_err(
+                            "toc_cache must be NoTocCache, InMemoryTocCache, or FileTocCache"
+                        )),
+                    },
+                },
+            },
+            None => AnyCacheWrapper::NoCache(NoTocCache),
         };
 
         let link_context_inner = link_context.inner.clone();
