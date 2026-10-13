@@ -961,6 +961,23 @@ class Localization:
         """
 
 @typing.final
+class LocoAnchorData:
+    r"""
+    Position data for one Loco Positioning anchor.
+    """
+    @property
+    def is_valid(self) -> builtins.bool:
+        r"""
+        Whether the anchor position is valid
+        """
+    @property
+    def position(self) -> builtins.list[builtins.float]:
+        r"""
+        Position of the anchor [x, y, z] in meters
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
 class LocoPositioning:
     r"""
     Loco Positioning System (UWB) interface
@@ -977,6 +994,29 @@ class LocoPositioning:
         # Arguments
         * `dest_id` - Destination node ID
         * `data` - LPP packet payload
+        """
+
+@typing.final
+class LocoSystemData:
+    r"""
+    Snapshot of the Loco Positioning System anchor state.
+
+    Returned by `Memory.read_loco_anchor_data()`.
+    """
+    @property
+    def anchors(self) -> builtins.dict[builtins.int, LocoAnchorData]:
+        r"""
+        Anchor position data, keyed by anchor ID
+        """
+    @property
+    def anchor_ids(self) -> builtins.list[builtins.int]:
+        r"""
+        IDs of the anchors configured in the system
+        """
+    @property
+    def active_anchor_ids(self) -> builtins.list[builtins.int]:
+        r"""
+        IDs of the anchors that are currently active
         """
 
 @typing.final
@@ -1176,6 +1216,14 @@ class Memory:
 
         # Arguments
         * `leds` - List of exactly 12 LedRingColor instances
+        """
+    async def read_loco_anchor_data(self) -> LocoSystemData:
+        r"""
+        Read the Loco Positioning anchor data from the Crazyflie.
+
+        Opens the Loco2 memory, reads the configured and active anchor ID
+        lists and the position of every configured anchor, and closes the
+        memory.
         """
     def get_memories(
         self, memory_type: typing.Optional[builtins.int] = None
