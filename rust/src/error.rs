@@ -34,7 +34,7 @@ pyo3_stub_gen::create_exception!(cflib2._rust, LinkError, CrazyflieError, "Crazy
 pyo3_stub_gen::create_exception!(cflib2._rust, DisconnectedError, CrazyflieError, "Crazyflie is disconnected.");
 pyo3_stub_gen::create_exception!(cflib2._rust, VariableNotFoundError, CrazyflieError, "Variable not found in TOC.");
 pyo3_stub_gen::create_exception!(cflib2._rust, SystemError, CrazyflieError, "Async executor error.");
-pyo3_stub_gen::create_exception!(cflib2._rust, AppchannelPacketTooLargeError, CrazyflieError, "App channel packet exceeds MTU.");
+pyo3_stub_gen::create_exception!(cflib2._rust, AppChannelPacketTooLargeError, CrazyflieError, "App channel packet exceeds MTU.");
 pyo3_stub_gen::create_exception!(cflib2._rust, InvalidArgumentError, CrazyflieError, "Invalid argument.");
 pyo3_stub_gen::create_exception!(cflib2._rust, TimeoutError, CrazyflieError, "Operation timed out.");
 pyo3_stub_gen::create_exception!(cflib2._rust, MemoryError, CrazyflieError, "Memory subsystem error.");
@@ -53,7 +53,7 @@ pub fn register_exceptions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("DisconnectedError", py.get_type::<DisconnectedError>())?;
     m.add("VariableNotFoundError", py.get_type::<VariableNotFoundError>())?;
     m.add("SystemError", py.get_type::<SystemError>())?;
-    m.add("AppchannelPacketTooLargeError", py.get_type::<AppchannelPacketTooLargeError>())?;
+    m.add("AppChannelPacketTooLargeError", py.get_type::<AppChannelPacketTooLargeError>())?;
     m.add("InvalidArgumentError", py.get_type::<InvalidArgumentError>())?;
     m.add("TimeoutError", py.get_type::<TimeoutError>())?;
     m.add("MemoryError", py.get_type::<MemoryError>())?;
@@ -75,7 +75,7 @@ pub fn to_pyerr(err: crazyflie_lib::Error) -> PyErr {
         Disconnected => DisconnectedError::new_err(msg),
         VariableNotFound => VariableNotFoundError::new_err(msg),
         SystemError(_) => self::SystemError::new_err(msg),
-        AppchannelPacketTooLarge => AppchannelPacketTooLargeError::new_err(msg),
+        AppChannelPacketTooLarge => AppChannelPacketTooLargeError::new_err(msg),
         InvalidArgument(_) => InvalidArgumentError::new_err(msg),
         Timeout => self::TimeoutError::new_err(msg),
         MemoryError(_) => self::MemoryError::new_err(msg),
