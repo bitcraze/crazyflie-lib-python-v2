@@ -14,7 +14,7 @@ extension-module = ["pyo3/extension-module"]
 [dependencies]
 pyo3 = { version = "0.26" }
 pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
-crazyflie-lib = "0.8.1"
+crazyflie-lib = { git = "https://github.com/n3orma/crazyflie-lib-rs.git", rev = "46fce4f6d32a9bdc65c3c819db0cbcae8ec029d3" }
 # Not used directly: forces the transitive libusb1-sys (via crazyflie-lib -> rusb)
 # to build its vendored libusb statically instead of linking whatever the build
 # host has installed, so wheels never depend on a system libusb.

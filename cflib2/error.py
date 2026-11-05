@@ -21,7 +21,7 @@
 """Crazyflie exception types"""
 
 from cflib2._rust import (
-    AppchannelPacketTooLargeError,
+    AppChannelPacketTooLargeError,
     ConversionError,
     CrazyflieError,
     DisconnectedError,
@@ -39,7 +39,7 @@ from cflib2._rust import (
 )
 
 __all__ = [
-    "AppchannelPacketTooLargeError",
+    "AppChannelPacketTooLargeError",
     "ConversionError",
     "CrazyflieError",
     "DisconnectedError",

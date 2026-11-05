@@ -40,7 +40,7 @@ class AppChannel:
         * List of received data packets (each up to 31 bytes)
         """
 
-class AppchannelPacketTooLargeError(CrazyflieError):
+class AppChannelPacketTooLargeError(CrazyflieError):
     r"""
     App channel packet exceeds MTU.
     """
