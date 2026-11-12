@@ -26,10 +26,14 @@
 //! [`CompressedStart`], and [`CompressedSegment`], then uploaded
 //! via the [`Memory`] subsystem. LED ring colors are set using
 //! [`LedRingColor`] and written via [`Memory::write_led_ring`].
+//! Loco Positioning anchor data is read via
+//! [`Memory::read_loco_anchor_data`] as a [`LocoSystemData`].
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::types::PyList;
 use pyo3_stub_gen::derive::*;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::error::to_pyerr;
@@ -295,6 +299,90 @@ impl CompressedSegment {
     }
 }
 
+/// Position data for one Loco Positioning anchor.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LocoAnchorData {
+    position: [f32; 3],
+    /// Whether the anchor position is valid
+    #[pyo3(get)]
+    is_valid: bool,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl LocoAnchorData {
+    /// Position of the anchor [x, y, z] in meters
+    #[getter]
+    fn position(&self) -> Vec<f32> {
+        self.position.to_vec()
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "LocoAnchorData(position=[{}, {}, {}], is_valid={})",
+            self.position[0], self.position[1], self.position[2],
+            if self.is_valid { "True" } else { "False" }
+        )
+    }
+}
+
+impl From<&crazyflie_lib::subsystems::memory::LocoAnchorData> for LocoAnchorData {
+    fn from(anchor: &crazyflie_lib::subsystems::memory::LocoAnchorData) -> Self {
+        Self {
+            position: anchor.position,
+            is_valid: anchor.is_valid,
+        }
+    }
+}
+
+/// Snapshot of the Loco Positioning System anchor state.
+///
+/// Returned by `Memory.read_loco_anchor_data()`.
+#[gen_stub_pyclass]
+#[pyclass]
+#[derive(Clone, Debug)]
+pub struct LocoSystemData {
+    anchor_ids: Vec<u8>,
+    active_anchor_ids: Vec<u8>,
+    /// Anchor position data, keyed by anchor ID
+    #[pyo3(get)]
+    anchors: HashMap<u8, LocoAnchorData>,
+}
+
+// The ID lists are returned as lists of ints: a plain `Vec<u8>` would be
+// converted to `bytes` by PyO3.
+#[gen_stub_pymethods]
+#[pymethods]
+impl LocoSystemData {
+    /// IDs of the anchors configured in the system
+    #[getter]
+    #[gen_stub(override_return_type(type_repr = "builtins.list[builtins.int]"))]
+    fn anchor_ids<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
+        PyList::new(py, &self.anchor_ids)
+    }
+
+    /// IDs of the anchors that are currently active
+    #[getter]
+    #[gen_stub(override_return_type(type_repr = "builtins.list[builtins.int]"))]
+    fn active_anchor_ids<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
+        PyList::new(py, &self.active_anchor_ids)
+    }
+}
+
+impl From<crazyflie_lib::subsystems::memory::LocoSystemData> for LocoSystemData {
+    fn from(data: crazyflie_lib::subsystems::memory::LocoSystemData) -> Self {
+        Self {
+            anchor_ids: data.anchor_ids,
+            active_anchor_ids: data.active_anchor_ids,
+            anchors: data.anchors.iter()
+                .map(|(&id, anchor)| (id, LocoAnchorData::from(anchor)))
+                .collect(),
+        }
+    }
+}
+
 /// Memory subsystem wrapper.
 ///
 /// Provides methods to upload trajectory data to the Crazyflie.
@@ -462,6 +550,39 @@ impl Memory {
             close_result?;
 
             Ok(())
+        })
+    }
+
+    /// Read the Loco Positioning anchor data from the Crazyflie.
+    ///
+    /// Opens the Loco2 memory, reads the configured and active anchor ID
+    /// lists and the position of every configured anchor, and closes the
+    /// memory.
+    #[gen_stub(override_return_type(type_repr = "collections.abc.Coroutine[typing.Any, typing.Any, LocoSystemData]"))]
+    fn read_loco_anchor_data<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let cf = self.cf.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let memories = cf.memory.get_memories(Some(MemoryType::Loco2));
+            let mem_device = (*memories.first()
+                .ok_or_else(|| to_pyerr(crazyflie_lib::Error::MemoryError(
+                    "No Loco2 memory found on Crazyflie".to_owned()
+                )))?)
+                .clone();
+
+            let loco_mem: crazyflie_lib::subsystems::memory::LocoMemory2 =
+                cf.memory.open_memory(mem_device).await
+                    .ok_or_else(|| to_pyerr(crazyflie_lib::Error::MemoryError(
+                        "Failed to open Loco2 memory".to_owned()
+                    )))?
+                    .map_err(to_pyerr)?;
+
+            let read_result = loco_mem.read_all().await.map_err(to_pyerr);
+            let close_result = cf.memory.close_memory(loco_mem).await.map_err(to_pyerr);
+
+            let data = read_result?;
+            close_result?;
+
+            Ok(LocoSystemData::from(data))
         })
     }
 
