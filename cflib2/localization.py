@@ -25,6 +25,7 @@ from cflib2._rust import (
     Lighthouse,
     LighthouseAngleData,
     LighthouseAngles,
+    LighthouseMatchedAngleData,
     Localization,
     LocoPositioning,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "Lighthouse",
     "LighthouseAngleData",
     "LighthouseAngles",
+    "LighthouseMatchedAngleData",
     "Localization",
     "LocoPositioning",
 ]
