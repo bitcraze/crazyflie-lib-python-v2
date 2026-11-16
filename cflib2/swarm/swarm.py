@@ -542,10 +542,12 @@ class Swarm:
             skipped.append(d)
         return skipped
 
-    async def arm(self, drones: Iterable[Drone] | None = None) -> None:
-        await self.parallel(
-            lambda d: d.cf.supervisor().send_arming_request(True), drones=drones
-        )
+    async def arm(
+        self, drones: Iterable[Drone] | None = None, *, timeout: float = 5.0
+    ) -> None:
+        """Arm the drones (default: all active) and wait until they can fly,
+        see `Drone.arm`"""
+        await self.parallel(lambda d: d.arm(timeout), drones=drones)
 
     async def disarm(self, drones: Iterable[Drone] | None = None) -> None:
         """Disarm, best effort, including FAILED drones"""
@@ -638,7 +640,12 @@ class Flight:
     async def __aenter__(self) -> Swarm:
         self._task = asyncio.current_task()
         if self._arm:
-            await self._swarm.arm()
+            try:
+                await self._swarm.arm()
+            except BaseException:
+                # __aexit__ does not run when entering fails: disarm here
+                await self._swarm.disarm()
+                raise
         self._watchers = [
             asyncio.create_task(self._watch(d)) for d in self._swarm.connected
         ]

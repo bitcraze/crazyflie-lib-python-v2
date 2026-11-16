@@ -110,6 +110,42 @@ class Drone:
     def __str__(self) -> str:
         return self.name
 
+    async def arm(self, timeout: float = 5.0, poll: float = 0.1) -> None:
+        """Arm and wait until the supervisor reports the drone can fly.
+
+        The firmware only accepts an arming request when the supervisor can
+        be armed (pre-flight checks passed) and silently drops it otherwise,
+        e.g. in the moments right after a disarm or a landing. So the request
+        is sent once the drone can be armed, and again if arming falls through
+        (e.g. the motor spin-up check fails).
+
+        "Can fly" only counts after our own request: right after a landing
+        the supervisor still reports it (state Landed, until it resets), and
+        supervisor reads are cached for 100 ms. A drone still armed on the
+        ground is disarmed first, so it goes through a fresh arming; a drone
+        that is flying is left alone. Raises `TimeoutError` if the drone
+        cannot fly after `timeout` seconds.
+        """
+        supervisor = self.cf.supervisor()
+        try:
+            async with asyncio.timeout(timeout):
+                state = await supervisor.read()
+                if state.is_flying:
+                    return
+                if state.is_armed:
+                    await supervisor.send_arming_request(False)
+                requested = False
+                while True:
+                    await asyncio.sleep(poll)
+                    state = await supervisor.read()
+                    if requested and state.can_fly:
+                        return
+                    if state.can_be_armed:
+                        await supervisor.send_arming_request(True)
+                        requested = True
+        except TimeoutError:
+            raise TimeoutError(f"{self} did not arm within {timeout:.0f} s") from None
+
     async def read_log(
         self, names: list[str], timeout: float = 5.0, period_ms: int = 50
     ) -> dict:

@@ -82,11 +82,14 @@ class FakeHlc:
 
 
 class FakeSupervisorState:
-    def __init__(self, flying: bool, flags: set[str]) -> None:
+    def __init__(self, flying: bool, flags: set[str], armed: bool = False) -> None:
         self.is_flying = flying
         self.is_locked = "locked" in flags
         self.is_crashed = "crashed" in flags
         self.is_tumbled = "tumbled" in flags
+        self.is_armed = armed
+        self.can_be_armed = not armed and not flags
+        self.can_fly = armed
 
 
 class FakeSupervisor:
@@ -94,12 +97,15 @@ class FakeSupervisor:
         self._cf = cf
 
     async def send_arming_request(self, do_arm: bool) -> None:
+        self._cf.arm_requests.append(do_arm)
         self._cf.armed = do_arm
 
     async def read(self) -> FakeSupervisorState:
         if self._cf.supervisor_error:
             raise self._cf.supervisor_error
-        return FakeSupervisorState(self._cf.flying, self._cf.supervisor_flags)
+        return FakeSupervisorState(
+            self._cf.flying, self._cf.supervisor_flags, self._cf.armed
+        )
 
 
 class FakeParam:
@@ -169,6 +175,7 @@ class FakeCf:
         self.set_error: Exception | None = None
         self.hlc = FakeHlc()
         self.armed = False
+        self.arm_requests: list[bool] = []
         self.flying = False
         self.supervisor_flags: set[str] = set()
         self.supervisor_error: Exception | None = None
@@ -608,11 +615,44 @@ class TestFlight:
                 await asyncio.sleep(5)
 
         task = asyncio.create_task(fly())
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.3)  # past arming, into the block
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
         assert all("land" in d.cf.hlc.names() for d in swarm.drones)  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_arm_waits_until_it_can_be_armed(self) -> None:
+        swarm = make_swarm()
+        d = swarm.by_pad(1)
+        d.cf.supervisor_flags = {"not ready"}  # type: ignore[attr-defined]
+
+        async def ready_later() -> None:
+            await asyncio.sleep(0.25)
+            d.cf.supervisor_flags = set()  # type: ignore[attr-defined]
+
+        asyncio.create_task(ready_later())
+        await swarm.arm()
+        assert all(x.cf.armed for x in swarm.drones)  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_arm_rearms_a_drone_still_armed_after_landing(self) -> None:
+        swarm = make_swarm()
+        d = swarm.by_pad(1)
+        d.cf.armed = True  # type: ignore[attr-defined]
+        await swarm.arm(drones=[d])
+        requests = d.cf.arm_requests  # type: ignore[attr-defined]
+        assert requests[0] is False and requests[-1] is True
+        assert d.cf.armed  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_arm_times_out_and_flight_disarms(self) -> None:
+        swarm = make_swarm()
+        swarm.by_pad(1).cf.supervisor_flags = {"not ready"}  # type: ignore[attr-defined]
+        with pytest.raises(SwarmError):
+            async with swarm.flight():
+                pass
+        assert not any(d.cf.armed for d in swarm.drones)  # type: ignore[attr-defined]
 
 
 # ---------------------------------------------------------------------------
