@@ -25,6 +25,7 @@
 //! It builds on top of the (low-level) [`crate::subsystems::commander::Commander`] subsystem and provides a more user-friendly interface
 //! for controlling the drone's behavior.
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::sync::Arc;

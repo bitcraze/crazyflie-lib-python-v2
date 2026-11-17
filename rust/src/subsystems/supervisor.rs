@@ -21,6 +21,7 @@
 
 //! Supervisor subsystem - Crazyflie state, arming, crash recovery, and emergency stop
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::sync::Arc;

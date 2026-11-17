@@ -21,6 +21,7 @@
 
 //! Parameter subsystem - read and write configuration parameters
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3_stub_gen_derive::*;
 use std::sync::Arc;

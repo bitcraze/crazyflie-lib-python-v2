@@ -21,6 +21,7 @@
 
 //! Error conversion utilities for Python bindings
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 

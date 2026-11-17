@@ -27,6 +27,7 @@
 //! via the [`Memory`] subsystem. LED ring colors are set using
 //! [`LedRingColor`] and written via [`Memory::write_led_ring`].
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use pyo3_stub_gen::derive::*;

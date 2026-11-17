@@ -21,6 +21,7 @@
 
 //! Platform subsystem - query device information and firmware details
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use pyo3_stub_gen_derive::*;

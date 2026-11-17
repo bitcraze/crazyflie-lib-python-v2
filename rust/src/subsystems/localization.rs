@@ -21,6 +21,7 @@
 
 //! Localization subsystem - external pose, lighthouse, and loco positioning
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::sync::Arc;

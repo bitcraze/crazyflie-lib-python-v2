@@ -21,6 +21,7 @@
 
 //! TOC Cache implementations for Python bindings
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyIOError;
 use pyo3_stub_gen_derive::*;

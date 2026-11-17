@@ -21,6 +21,7 @@
 
 //! Crazyflie Value to Python conversion utilities
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 
 /// Convert a crazyflie_lib::Value to a Python int or float.

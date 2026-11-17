@@ -21,6 +21,7 @@
 
 //! Console subsystem - read text output from the Crazyflie
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::sync::Arc;

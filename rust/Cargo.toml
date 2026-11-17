@@ -14,7 +14,9 @@ extension-module = ["pyo3/extension-module"]
 [dependencies]
 pyo3 = { version = "0.26" }
 pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
-crazyflie-lib = "0.8.1"
+# crazyflie-lib is used through crazyflie_ecosystem::crazyflie_lib
+# TODO: switch to crates.io once crazyflie-ecosystem is published
+crazyflie-ecosystem = { path = "../../crazyflie-ecosystem" }
 # Not used directly: forces the transitive libusb1-sys (via crazyflie-lib -> rusb)
 # to build its vendored libusb statically instead of linking whatever the build
 # host has installed, so wheels never depend on a system libusb.

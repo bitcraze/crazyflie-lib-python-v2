@@ -32,6 +32,7 @@
 //!  - In no setpoint are received for 1 seconds, the Crazyflie will reset roll/pitch/yawrate to 0/0/0 and after 2 seconds
 //!    will fallback fallback to a lower-priority setpoint which in most case will cut the motors.
 
+use crazyflie_ecosystem::crazyflie_lib;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::sync::Arc;
