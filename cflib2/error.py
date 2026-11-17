@@ -22,11 +22,13 @@
 
 from cflib2._rust import (
     AppchannelPacketTooLargeError,
+    ConfigFileError,
     ConversionError,
     CrazyflieError,
     DisconnectedError,
     InvalidArgumentError,
     InvalidParameterError,
+    LighthouseError,
     LinkError,
     LogError,
     MemoryError,
@@ -40,11 +42,13 @@ from cflib2._rust import (
 
 __all__ = [
     "AppchannelPacketTooLargeError",
+    "ConfigFileError",
     "ConversionError",
     "CrazyflieError",
     "DisconnectedError",
     "InvalidArgumentError",
     "InvalidParameterError",
+    "LighthouseError",
     "LinkError",
     "LogError",
     "MemoryError",

@@ -27,6 +27,7 @@ use pyo3::prelude::*;
 
 mod crazyflie;
 mod error;
+pub mod lighthouse;
 mod link_context;
 pub mod subsystems;
 mod toc_cache;
@@ -75,6 +76,14 @@ fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<NoTocCache>()?;
     m.add_class::<InMemoryTocCache>()?;
     m.add_class::<FileTocCache>()?;
+    m.add_class::<lighthouse::LighthouseCalibrationSweep>()?;
+    m.add_class::<lighthouse::LighthouseBsCalibration>()?;
+    m.add_class::<lighthouse::LighthouseBsGeometry>()?;
+    m.add_class::<lighthouse::LighthouseConfig>()?;
+    m.add_class::<lighthouse::LighthouseSlotReport>()?;
+    m.add_class::<lighthouse::LighthouseConfigWriteReport>()?;
+    m.add_function(wrap_pyfunction!(lighthouse::read_lighthouse_config, m)?)?;
+    m.add_function(wrap_pyfunction!(lighthouse::write_lighthouse_config, m)?)?;
     error::register_exceptions(m)?;
     Ok(())
 }

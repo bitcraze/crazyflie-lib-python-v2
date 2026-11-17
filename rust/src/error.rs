@@ -40,6 +40,8 @@ pyo3_stub_gen::create_exception!(cflib2._rust, InvalidArgumentError, CrazyflieEr
 pyo3_stub_gen::create_exception!(cflib2._rust, TimeoutError, CrazyflieError, "Operation timed out.");
 pyo3_stub_gen::create_exception!(cflib2._rust, MemoryError, CrazyflieError, "Memory subsystem error.");
 pyo3_stub_gen::create_exception!(cflib2._rust, InvalidParameterError, CrazyflieError, "Invalid parameter.");
+pyo3_stub_gen::create_exception!(cflib2._rust, ConfigFileError, CrazyflieError, "Configuration file malformed or not supported.");
+pyo3_stub_gen::create_exception!(cflib2._rust, LighthouseError, CrazyflieError, "Lighthouse operation failed.");
 
 /// Register all custom exception types with the Python module
 pub fn register_exceptions(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -59,6 +61,8 @@ pub fn register_exceptions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("TimeoutError", py.get_type::<TimeoutError>())?;
     m.add("MemoryError", py.get_type::<MemoryError>())?;
     m.add("InvalidParameterError", py.get_type::<InvalidParameterError>())?;
+    m.add("ConfigFileError", py.get_type::<ConfigFileError>())?;
+    m.add("LighthouseError", py.get_type::<LighthouseError>())?;
     Ok(())
 }
 
@@ -81,5 +85,15 @@ pub fn to_pyerr(err: crazyflie_lib::Error) -> PyErr {
         Timeout => self::TimeoutError::new_err(msg),
         MemoryError(_) => self::MemoryError::new_err(msg),
         InvalidParameter(_) => InvalidParameterError::new_err(msg),
+    }
+}
+
+/// Convert Rust crazyflie_ecosystem errors to Python exceptions
+pub fn ecosystem_to_pyerr(err: crazyflie_ecosystem::Error) -> PyErr {
+    use crazyflie_ecosystem::Error::*;
+    match err {
+        LibError(err) => to_pyerr(err),
+        ConfigFileError(_) => self::ConfigFileError::new_err(err.to_string()),
+        LighthouseError(_) => self::LighthouseError::new_err(err.to_string()),
     }
 }
